@@ -74,7 +74,7 @@ struct RandomQuote {
   }
   enum Action {
     case getQuoteTapped
-    case quoteUpdated(String)
+    case quoteLoaded(String)
   }
   struct Response: Codable {
     let quote: String
@@ -86,16 +86,16 @@ struct RandomQuote {
       case .getQuoteTapped:
         state.text = "Loading..."
         return Task {
-          guard let url = URL(string: "https://cipher.lei.fyi/quote?pageId=\(Int.random(in: 1...2667))") else { return }
+          guard let url = URL(string: "https://cipher.lei.fyi/quote") else { return }
           do {
             let (data, _) = try await URLSession.shared.data(for: URLRequest(url: url))
             let result = try JSONDecoder().decode(Response.self, from: data)
-            send(.quoteUpdated(result.quote + " - " + result.author))
+            send(.quoteLoaded(result.quote + " - " + result.author))
           } catch {
-            send(.quoteUpdated("Error: \(error)"))
+            send(.quoteLoaded("Error: \(error)"))
           }
         }.toCancellables()
-      case .quoteUpdated(let text):
+      case .quoteLoaded(let text):
         state.text = text
         return nil
       }
