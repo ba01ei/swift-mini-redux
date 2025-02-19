@@ -18,6 +18,8 @@ It supports the basic concepts of Redux: Store, State, Action, Reducer, and Side
 
 ### Basic example
 
+The simplest counter app
+
 ```
 import MiniRedux
 import SwiftUI
@@ -63,7 +65,7 @@ struct CounterView: View {
 
 ### Async Side Effect
 
-Reduce a Task in the reducer function to run asynchronously, and call send when the result is ready
+Return a Task in the reducer function to run asynchronously, and call send when the result is ready
 
 ```
 struct RandomQuote: Reducer {
