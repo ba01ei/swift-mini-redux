@@ -1,0 +1,28 @@
+@preconcurrency import Combine
+import Testing
+import Foundation
+@testable import MiniRedux
+
+@Test func simpleReducer() async throws {
+  struct Counter: Reducer {
+    struct State {
+      var count = 0
+    }
+    enum Action {
+      case increment
+    }
+    static func store(_ initialState: State = State()) -> Store<State, Action> {
+      return Store(initialState) { state, action, send in
+        switch action {
+        case .increment:
+          state.count += 1
+          return nil
+        }
+      }
+    }
+  }
+
+  let store = await Counter.store()
+  await store.send(.increment)
+  #expect(await store.state.count == 1)
+}
