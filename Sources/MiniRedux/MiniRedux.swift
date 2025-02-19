@@ -2,7 +2,7 @@ import Combine
 import SwiftUI
 
 @MainActor public class Store<State, Action>: ObservableObject {
-  @Published var state: State
+  @Published public private(set) var state: State
   let reducer: @MainActor (inout State, Action, @escaping @MainActor (Action) -> Void) -> [AnyCancellable]?
 
   var cancellables = Set<AnyCancellable>()
