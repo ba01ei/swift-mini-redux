@@ -2,7 +2,7 @@
 
 A minimal implementation of the Redux pattern in Swift.
 
-Inspired by [The Composable Architecture by PointFree](https://github.com/pointfreeco/swift-composable-architecture).
+Inspired by TCA, i.e. [The Composable Architecture by PointFree](https://github.com/pointfreeco/swift-composable-architecture).
 
 This is a minimalist version of TCA that
 
