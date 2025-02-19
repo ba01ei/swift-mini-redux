@@ -2,7 +2,9 @@ import Combine
 import SwiftUI
 
 @MainActor public class Store<State, Action>: ObservableObject {
-  @Published public private(set) var state: State
+  /// state setter is also public so you can use `$store.state.someProperty` as `Binding`, but otherwise don't manually set the `store.state`, only modify state in a reducer
+  @Published public var state: State
+
   let reducer: @MainActor (inout State, Action, @escaping @MainActor (Action) -> Void) -> [AnyCancellable]?
 
   var cancellables = Set<AnyCancellable>()
