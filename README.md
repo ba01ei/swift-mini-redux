@@ -32,7 +32,7 @@ struct Counter {
     case increment
     case decrement
   }
-  @MainActor static func store(_ initialState: State = State()) -> Store<State, Action> {
+  @MainActor static func store() -> Store<State, Action> {
     return Store(initialState) { state, action, send in
       switch action {
       case .increment:
@@ -80,7 +80,7 @@ struct RandomQuote {
     let quote: String
     let author: String
   }
-  @MainActor static func store(_ initialState: State = State()) -> Store<State, Action> {
+  @MainActor static func store() -> Store<State, Action> {
     return Store(initialState) { state, action, send in
       switch action {
       case .getQuoteTapped:
