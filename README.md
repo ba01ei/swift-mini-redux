@@ -24,7 +24,7 @@ The simplest counter app
 import MiniRedux
 import SwiftUI
 
-struct Counter: Reducer {
+struct Counter {
   struct State {
     var count = 0
   }
@@ -68,7 +68,7 @@ struct CounterView: View {
 Return a Task in the reducer function to run asynchronously, and call send when the result is ready
 
 ```
-struct RandomQuote: Reducer {
+struct RandomQuote {
   struct State {
     var text = ""
   }
