@@ -2,20 +2,21 @@
 
 A minimal implementation of the Redux pattern in Swift.
 
-Inspired by [The Composable Architecture by PointFree](https://github.com/pointfreeco/swift-composable-architecture). For a more complete feature set, please check out The Composable Architecture.
+Inspired by [The Composable Architecture by PointFree](https://github.com/pointfreeco/swift-composable-architecture).
 
 This is a minimalist version of TCA that
+
 1. The entire library is in one file
 2. It doesn't depend on Swift Macro
 3. You can use it in iPad Swift Playground
 
-It's useful for prototyping something quick. You can also just copy/paste the code without dealing with the installation.
+It's not a replacement for TCA. For a comprehensive project, we recommend using TCA. This library is useful for prototyping something quick. E.g. you can also just copy/paste the code into a Playground, or a temporary project, without dealing with the package installation. Also since iPad Swift Playground doesn't support Swift Macro yet (as of Feb 2025), this library is an alternative to TCA for prototyping on iPad.
 
-It supports the basic concepts of Redux (Store, State, Action, Reducer, Side Effect).
+It supports the basic concepts of Redux: Store, State, Action, Reducer, and Side Effect (through Task or Combine). It doesn't support some advanced features of TCA, like scoping reducers, Observable architecture, and navigation tools, etc.
 
 ## Examples
 
-### Basic setup
+### Basic example
 
 ```
 import MiniRedux
@@ -60,59 +61,57 @@ struct CounterView: View {
 }
 ```
 
-
-### Async Call
+### Async Side Effect
 
 Reduce a Task in the reducer function to run asynchronously, and call send when the result is ready
 
 ```
 struct RandomQuote: Reducer {
- struct State {
-   var text = ""
- }
- enum Action {
-   case getQuoteTapped
-   case quoteUpdated(String)
- }
+  struct State {
+    var text = ""
+  }
+  enum Action {
+    case getQuoteTapped
+    case quoteUpdated(String)
+  }
+  struct Response: Codable {
+    let quote: String
+    let author: String
+  }
   @MainActor static func store(_ initialState: State = State()) -> Store<State, Action> {
-   return Store(initialState) { state, action, send in
-     switch action {
-     case .getQuoteTapped:
-       state.text = "Loading..."
-       return Task {
-         guard let url = URL(string: "https://cipher.lei.fyi/quote?pageId=\(Int.random(in: 1...2667))") else { return }
-         do {
-           let (data, _) = try await URLSession.shared.data(for: URLRequest(url: url))
-           let result = try JSONDecoder().decode(Response.self, from: data)
-           send(.quoteUpdated(result.quote + " - " + result.author))
-         } catch {
-           send(.quoteUpdated("Error: \(error)"))
-         }
-       }.toCancellables()
-     case .quoteUpdated(let text):
-       state.text = text
-       return nil
-     }
+    return Store(initialState) { state, action, send in
+      switch action {
+      case .getQuoteTapped:
+        state.text = "Loading..."
+        return Task {
+          guard let url = URL(string: "https://cipher.lei.fyi/quote?pageId=\(Int.random(in: 1...2667))") else { return }
+          do {
+            let (data, _) = try await URLSession.shared.data(for: URLRequest(url: url))
+            let result = try JSONDecoder().decode(Response.self, from: data)
+            send(.quoteUpdated(result.quote + " - " + result.author))
+          } catch {
+            send(.quoteUpdated("Error: \(error)"))
+          }
+        }.toCancellables()
+      case .quoteUpdated(let text):
+        state.text = text
+        return nil
+      }
    }
  }
-}
-
-struct Response: Codable {
- let quote: String
- let author: String
 }
 
 struct RandomQuoteView: View {
- @ObservedObject private var store = RandomQuote.store()
+  @ObservedObject private var store = RandomQuote.store()
 
- var body: some View {
-   VStack {
-     Text(store.state.text)
-     Button("Get Random Quote") {
-       store.send(.getQuoteTapped)
-     }
-   }
- }
+  var body: some View {
+    VStack {
+      Text(store.state.text)
+      Button("Get Random Quote") {
+        store.send(.getQuoteTapped)
+      }
+    }
+  }
 }
 ```
 
@@ -122,12 +121,12 @@ You can also return a cancellable from a Combine subscription.
 @MainActor static func store(_ initialState: State = State()) -> Store<State, Action> {
   // when creating a store, an initialAction can be passed so it will be called when the store is initialized
   return Store(initialState, initialAction: .initialized) { state, action, send in
-   switch action {
-   case .initialized:
-     return publisher.receive(on: DispatchQueue.main).sink { result in
-       send(.resultUpdated(result))
-     }
-   }
+    switch action {
+    case .initialized:
+      return publisher.receive(on: DispatchQueue.main).sink { result in
+        send(.resultUpdated(result))
+      }
+    }
  }
 }
 ```
