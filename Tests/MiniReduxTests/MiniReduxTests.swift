@@ -4,14 +4,14 @@ import Foundation
 @testable import MiniRedux
 
 @Test func simpleReducer() async throws {
-  struct Counter: Reducer {
+  struct Counter {
     struct State {
       var count = 0
     }
     enum Action {
       case increment
     }
-    static func store(_ initialState: State = State()) -> Store<State, Action> {
+    @MainActor static func store(_ initialState: State = State()) -> Store<State, Action> {
       return Store(initialState) { state, action, send in
         switch action {
         case .increment:

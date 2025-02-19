@@ -23,12 +23,6 @@ import SwiftUI
   }
 }
 
-public protocol Reducer {
-  associatedtype State
-  associatedtype Action
-  /// Create a new Store for with this Reducer
-  @MainActor static func store(_ initialState: State) -> Store<State, Action>
-}
 /// Allow auto cancellation of Tasks
 extension Task {
   public func toCancellable() -> AnyCancellable {
