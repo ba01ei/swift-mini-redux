@@ -6,11 +6,11 @@ Inspired by [The Composable Architecture by PointFree](https://github.com/pointf
 
 This is a minimalist version of TCA that
 
-1. The entire library is in one file
+1. The entire library is in [one file](Sources/MiniRedux/MiniRedux.swift)
 2. It doesn't depend on Swift Macro
 3. You can use it in iPad Swift Playground
 
-It's not a replacement for TCA. For a comprehensive project, we recommend using TCA. This library is useful for prototyping something quick. E.g. you can also just copy/paste the code into a Playground, or a temporary project, without dealing with the package installation. Also since iPad Swift Playground doesn't support Swift Macro yet (as of Feb 2025), this library is an alternative to TCA for prototyping on iPad.
+It's not a replacement for TCA. For a comprehensive project, we recommend using TCA. This library is useful for prototyping something quick. E.g. you can also just copy/paste the [code](Sources/MiniRedux/MiniRedux.swift) into a Playground, or a temporary project, without dealing with the package installation. Also since iPad Swift Playground doesn't support Swift Macro yet (as of Feb 2025), this library is an alternative to TCA for prototyping on iPad.
 
 It supports the basic concepts of Redux: Store, State, Action, Reducer, and Side Effect (through Task or Combine). It doesn't support some advanced features of TCA, like scoping reducers, Observable architecture, and navigation tools, etc.
 
