@@ -6,7 +6,7 @@ Inspired by TCA, i.e. [The Composable Architecture by PointFree](https://github.
 
 This is a minimalist version of TCA that
 
-1. The entire library is in [one file](Sources/MiniRedux/MiniRedux.swift)
+1. The entire library is mostly in [one file](Sources/MiniRedux/MiniRedux.swift)
 2. It doesn't depend on Swift Macro
 3. You can use it in iPad Swift Playground
 
@@ -33,7 +33,7 @@ struct Counter {
     case decrement
   }
   @MainActor static func store() -> Store<State, Action> {
-    return Store(initialState) { state, action, send in
+    return Store(initialState: State()) { state, action, send in
       switch action {
       case .increment:
         state.count += 1
@@ -81,7 +81,7 @@ struct RandomQuote {
     let author: String
   }
   @MainActor static func store() -> Store<State, Action> {
-    return Store(initialState) { state, action, send in
+    return Store(initialState: RandomQuote()) { state, action, send in
       switch action {
       case .getQuoteTapped:
         state.text = "Loading..."
@@ -120,9 +120,9 @@ struct RandomQuoteView: View {
 You can also return a cancellable from a Combine subscription.
 
 ```
-@MainActor static func store(_ initialState: State = State()) -> Store<State, Action> {
+@MainActor static func store() -> Store<State, Action> {
   // when creating a store, an initialAction can be passed so it will be called when the store is initialized
-  return Store(initialState, initialAction: .initialized) { state, action, send in
+  return Store(initialState: State(), initialAction: .initialized) { state, action, send in
     switch action {
     case .initialized:
       return publisher.receive(on: DispatchQueue.main).sink { result in
