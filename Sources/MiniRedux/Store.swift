@@ -5,20 +5,25 @@ import SwiftUI
   /// state setter is also public so you can use `$store.state.someProperty` as `Binding`, but otherwise don't manually set the `store.state`, only modify state in a reducer
   @Published public var state: State
 
-  let reducer: @MainActor (inout State, Action, @escaping @MainActor (Action) -> Void) -> [AnyCancellable]?
+  private let reducer: @MainActor (inout State, Action, @escaping @MainActor (Action) -> Void) -> [AnyCancellable]?
+  private var cancellables = Set<AnyCancellable>()
+  private let debug: Bool
 
-  var cancellables = Set<AnyCancellable>()
-
-  public init(_ initialState: State, initialAction: Action? = nil,  _ reducer: @escaping @MainActor (inout State, Action, @escaping @MainActor (Action) -> Void) -> [AnyCancellable]?) {
+  public init(initialState: State, initialAction: Action? = nil, debug: Bool = false, _ reducer: @escaping @MainActor (inout State, Action, @escaping @MainActor (Action) -> Void) -> [AnyCancellable]?) {
     self.state = initialState
     self.reducer = reducer
+    self.debug = debug
     if let initialAction { send(initialAction) }
   }
 
   public func send(_ action: Action) {
-    // print("received action \(action)")
+    if debug {
+      print("received action \(String(describing: action)))")
+    }
     let result = reducer(&state, action, send)
-    // print("state changes to \(state)")
+    if debug {
+      print("state changes to \(String(describing: state)))")
+    }
     for cancellable in result ?? [] {
       cancellable.store(in: &cancellables)
     }
