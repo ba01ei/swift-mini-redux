@@ -81,7 +81,7 @@ struct RandomQuote {
     let author: String
   }
   @MainActor static func store() -> Store<State, Action> {
-    return Store(initialState: RandomQuote()) { state, action, send in
+    return Store(initialState: State()) { state, action, send in
       switch action {
       case .getQuoteTapped:
         state.text = "Loading..."
