@@ -155,7 +155,7 @@ Then why Redux/TCA over MVVM?
 I believe Redux and MVVM are not that different. They are both declarative, reactive, works well with SwiftUI. The cool things about Redux/TCA are:
 
 1. Clear and consistent pattern. E.g. every parameter affecting UI is in the State, and every process that updates the State goes through Actions. With MVVM I've seen different people doing it in many ways since a view model seems to be more open ended, and later it's hard to find things and troubleshoot bugs. 
-2. The Side Effect even in its simplest form (as in this repo) is very powerful for managing asynchronous processes. It's easier to understand and reason than Combine/Rx, and it's more powerful than out-of-box async/await/AsyncStream.
+2. The Side Effect even in its simplest form (as in this repo) is very helpful for managing asynchronous processes. It's easier to understand and reason than Combine/Rx, and it's more powerful than out-of-box async/await/AsyncStream.
 
 ## License
 
