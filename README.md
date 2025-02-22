@@ -23,7 +23,7 @@ It supports the basic concepts of Redux: Store, State, Action, Reducer, and Side
 
 The simplest counter app
 
-```
+```swift
 import MiniRedux
 import SwiftUI
 
@@ -70,7 +70,7 @@ struct CounterView: View {
 
 Return a Task in the reducer function to run asynchronously, and call send when the result is ready
 
-```
+```swift
 struct RandomQuote {
   struct State {
     var text = ""
@@ -123,7 +123,7 @@ struct RandomQuoteView: View {
 
 You can also return a cancellable from a Combine subscription.
 
-```
+```swift
 @MainActor static func store() -> Store<State, Action> {
   // when creating a store, an initialAction can be passed so it will be called when the store is initialized
   return Store(initialState: State(), initialAction: .initialized) { state, action in
