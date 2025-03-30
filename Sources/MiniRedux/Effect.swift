@@ -24,7 +24,7 @@ public enum Effect<Action: Sendable> {
       if let id, cancelInFlight {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
       }
-      Task {
+      Task.detached {
         await run(send)
       }
       .toCancellable()
