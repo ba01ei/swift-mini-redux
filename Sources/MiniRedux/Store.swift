@@ -8,11 +8,16 @@ import SwiftUI
   private let reducer: @MainActor (inout State, Action) -> Effect<Action>
   private var cancellables = [String: Set<AnyCancellable>]()
   private let debug: Bool
+  public var delegatedActionHandler: (@MainActor (Action) -> Void)?
 
-  public init(initialState: State, initialAction: Action? = nil, debug: Bool = false, _ reducer: @escaping @MainActor (inout State, Action) -> Effect<Action>) {
-    self.state = initialState
-    self.reducer = reducer
-    self.debug = debug
+  public init(
+    initialState: State, initialAction: Action? = nil,
+    delegateActionHandler: (@MainActor (Action) -> Void)? = nil,
+    debug: Bool = false, _ reducer: @escaping @MainActor (inout State, Action) -> Effect<Action>) {
+      self.state = initialState
+      self.reducer = reducer
+      self.debug = debug
+      self.delegatedActionHandler = delegateActionHandler
     if let initialAction { send(initialAction) }
   }
 
@@ -25,5 +30,7 @@ import SwiftUI
       print("state changes to \(String(describing: state)))")
     }
     result.perform(cancellablesDict: &cancellables, send: send)
+
+    delegatedActionHandler?(action)
   }
 }
