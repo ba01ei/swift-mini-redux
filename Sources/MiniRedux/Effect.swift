@@ -17,9 +17,11 @@ public enum Effect<Action: Sendable> {
     switch self {
     case .none:
       break
+
     case .cancel(let id):
       cancellablesDict[id]?.forEach { $0.cancel() }
       cancellablesDict.removeValue(forKey: id)
+
     case .run(let id, let cancelInFlight, let run):
       if let id, cancelInFlight {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
@@ -29,6 +31,7 @@ public enum Effect<Action: Sendable> {
       }
       .toCancellable()
       .store(id: id ?? "", in: &cancellablesDict)
+
     case .publisher(let id, let cancelInFlight, let publisher):
       if let id, cancelInFlight {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
@@ -39,6 +42,7 @@ public enum Effect<Action: Sendable> {
         }
       }
       .store(id: id ?? "", in: &cancellablesDict)
+
     case .merge(let id, let cancelInFlight, let effects):
       if let id, cancelInFlight {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
@@ -51,6 +55,7 @@ public enum Effect<Action: Sendable> {
         }
         effectToUse.perform(cancellablesDict: &cancellablesDict, send: send)
       }
+
     }
   }
   
@@ -59,12 +64,16 @@ public enum Effect<Action: Sendable> {
     switch self {
     case .none, .cancel:
       return self
+
     case .run(_, _, let run):
       return .run(id: id, cancelInFlight: cancelInFlight, run)
+
     case .publisher(_, _, let publisher):
       return .publisher(id: id, cancelInFlight: cancelInFlight, publisher)
+
     case .merge(_, _, let effects):
       return .merge(id: id, cancelInFlight: cancelInFlight, effects)
+
     }
   }
 }

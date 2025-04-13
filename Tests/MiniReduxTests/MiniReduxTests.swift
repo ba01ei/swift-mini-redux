@@ -60,23 +60,22 @@ import MiniRedux
       var value = 0
     }
     enum Action {
-      case childValueUpdated(Int)
+      case childActions(Child.Action)
     }
     @MainActor static func store(childStore: StoreOf<Child>) -> StoreOf<Self> {
-      let store = StoreOf<Self>(initialState: State()) { state, action in
+      return StoreOf<Self>(initialState: State()) { state, action in
         switch action {
-        case .childValueUpdated(let value):
-          state.value = value
-          return .none
+        case .childActions(let childAction):
+          switch childAction {
+          case .valueUpdated(let value):
+            state.value = value
+            return .none
+          }
         }
       }
-      childStore.delegatedActionHandler = { [weak store] action in
-        switch action {
-        case .valueUpdated(let value):
-          store?.send(.childValueUpdated(value))
-        }
+      .handleActions(from: childStore) { action in
+        .childActions(action)
       }
-      return store
     }
   }
 
