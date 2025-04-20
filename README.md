@@ -4,19 +4,6 @@ A minimal implementation of the Redux pattern in Swift.
 
 Inspired by TCA, i.e. [The Composable Architecture by PointFree](https://github.com/pointfreeco/swift-composable-architecture).
 
-This is a minimalist version of TCA that
-
-1. The entire library is in [two](Sources/MiniRedux/Store.swift) [files](Sources/MiniRedux/Effect.swift)
-2. It doesn't depend on Swift Macro
-3. You can use it in iPad Swift Playground
-
-It's not a replacement for TCA. For a comprehensive project, we recommend using TCA. This library is made for:
-
-1. Quick prototyping an idea, in which case you can also just copy/paste the code without adding the package dependency
-2. Small project created in Swift Playground on iPad or MacOS 
-
-It supports the basic concepts of Redux: Store, State, Action, Reducer, and Side Effect. It doesn't support some advanced features of TCA, like scoping reducers, Observable architecture, and navigation tools, etc. The APIs are very similar to TCA, so you can also prototype with this first and migrate to TCA easily if the project starts to grow bigger.
-
 ## Examples
 
 ### Basic example
@@ -66,7 +53,7 @@ struct CounterView: View {
 }
 ```
 
-### Async Side Effect
+### Async side effect
 
 Return a Task in the reducer function to run asynchronously, and call send when the result is ready
 
@@ -141,21 +128,51 @@ You can also return a cancellable from a Combine subscription.
 }
 ```
 
-## More on why
+### Interactions between two stores 
 
-A question is why do you need this architecture for a small project. For a quick prototype or small side project, why not just use vanilla SwiftUI?
+```swift
+struct Child: Reducer {
+  struct State {
+    var value = 0
+  }
+  enum Action: Sendable {
+    case valueUpdated(Int)
+  }
+  @MainActor static func store() -> StoreOf<Self> {
+    return Store(initialState: State()) { state, action in
+      switch action {
+      case .valueUpdated(let value):
+        state.value = value
+        return .none
+      }
+    }
+  }
+}
 
-In my experience from building both small side projects, there are reasons to have a good structure even for a 100 line single screen simple app:
-
-1. If it's side project, despite an intention to keep it small and simple, it can and will grow, and without a structure it will grow messy.
-2. It reduces cognitive load on decisions. Even when we say vanilla SwiftUI, there are still many ways to do things. Do you use @State or @ObservableObject or @Observable? If there is a networking call, do you trigger it in the view struct or an object observed by the view? Do you use Combine or AsyncStream if there is any ongoing subscription?
-
-Then why Redux/TCA over MVVM?
-
-I believe Redux and MVVM are not that different. They are both declarative, reactive, works well with SwiftUI. The cool things about Redux/TCA are:
-
-1. Clear and consistent pattern. E.g. every parameter affecting UI is in the State, and every process that updates the State goes through Actions. With MVVM I've seen different people doing it in many ways since a view model seems to be more open ended, and later it's hard to find things and troubleshoot bugs. 
-2. The Side Effect even in its simplest form (as in this repo) is very helpful for managing asynchronous processes. It's easier to understand and reason than Combine/Rx, and it's more powerful than out-of-box async/await/AsyncStream.
+struct Parent: Reducer {
+  struct State {
+    var value = 0
+  }
+  enum Action {
+    case childActions(Child.Action)
+  }
+  @MainActor static func store(childStore: StoreOf<Child>) -> StoreOf<Self> {
+    return StoreOf<Self>(initialState: State()) { state, action in
+      switch action {
+      case .childActions(let childAction):
+        switch childAction {
+        case .valueUpdated(let value):
+          state.value = value
+          return .none
+        }
+      }
+    }
+    .handleActions(from: childStore) { action in
+      .childActions(action)
+    }
+  }
+}
+```
 
 ## License
 
