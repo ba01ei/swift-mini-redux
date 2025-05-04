@@ -1,6 +1,6 @@
 public protocol Reducer {
-    associatedtype State
-    associatedtype Action
+  associatedtype State: Equatable, Sendable
+  associatedtype Action: Sendable
 }
 
 public typealias StoreOf<R: Reducer> = Store<R.State, R.Action>

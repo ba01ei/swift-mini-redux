@@ -14,16 +14,16 @@ The simplest counter app
 import MiniRedux
 import SwiftUI
 
-struct Counter {
-  struct State {
+struct Counter: Reducer {
+  struct State: Equatable {
     var count = 0
   }
   enum Action {
     case incrementTapped
     case decrementTapped
   }
-  @MainActor static func store() -> Store<State, Action> {
-    return Store(initialState: State()) { state, action in
+  @MainActor static func store() -> StoreOf<Self> {
+    return Store(initialState: State()) { state, action, send in
       switch action {
       case .incrementTapped:
         state.count += 1
@@ -58,8 +58,8 @@ struct CounterView: View {
 Return a Task in the reducer function to run asynchronously, and call send when the result is ready
 
 ```swift
-struct RandomQuote {
-  struct State {
+struct RandomQuote: Reducer {
+  struct State: Equatable {
     var text = ""
   }
   enum Action {
@@ -70,8 +70,8 @@ struct RandomQuote {
     let quote: String
     let author: String
   }
-  @MainActor static func store() -> Store<State, Action> {
-    return Store(initialState: State()) { state, action in
+  @MainActor static func store() -> StoreOf<Self> {
+    return Store(initialState: State()) { state, action, send in
       switch action {
       case .getQuoteTapped:
         state.text = "Loading..."
@@ -108,12 +108,12 @@ struct RandomQuoteView: View {
 }
 ```
 
-You can also return a cancellable from a Combine subscription.
+You can also return an effect based on a Combine publisher.
 
 ```swift
 @MainActor static func store() -> Store<State, Action> {
   // when creating a store, an initialAction can be passed so it will be called when the store is initialized
-  return Store(initialState: State(), initialAction: .initialized) { state, action in
+  return Store(initialState: State(), initialAction: .initialized) { state, action, _ in
     switch action {
     case .initialized:
       return .publisher {
@@ -132,14 +132,14 @@ You can also return a cancellable from a Combine subscription.
 
 ```swift
 struct Child: Reducer {
-  struct State {
+  struct State: Equatable {
     var value = 0
   }
   enum Action: Sendable {
     case valueUpdated(Int)
   }
   @MainActor static func store() -> StoreOf<Self> {
-    return Store(initialState: State()) { state, action in
+    return Store(initialState: State()) { state, action, send in
       switch action {
       case .valueUpdated(let value):
         state.value = value
@@ -150,14 +150,14 @@ struct Child: Reducer {
 }
 
 struct Parent: Reducer {
-  struct State {
+  struct State: Equatable {
     var value = 0
   }
   enum Action {
     case childActions(Child.Action)
   }
   @MainActor static func store(childStore: StoreOf<Child>) -> StoreOf<Self> {
-    return StoreOf<Self>(initialState: State()) { state, action in
+    return StoreOf<Self>(initialState: State()) { state, action, send in
       switch action {
       case .childActions(let childAction):
         switch childAction {
@@ -172,6 +172,81 @@ struct Parent: Reducer {
     }
   }
 }
+```
+
+### A list of child stores
+```
+struct List: Reducer {
+  struct State: Equatable {
+    /// Child stores can live in the state of their parents.
+    /// Updates of child item's store's state won't cause the parent or siblings to re-render 
+    var items: [StoreOf<Item>] = []
+  }
+  
+  enum Action {
+    case itemsFetched([Item.State])
+    case itemAction(id: String, Item.Action)
+  }
+  
+  @MainActor static func store() -> StoreOf<Self> {
+    return Store(initialState: State()) { state, action, send in
+      switch action {
+
+      case .itemsFetched(let items):
+        updateList(originals: &state.items, newItems: items) { @MainActor item in
+          return Item.store(item) { childAction in
+            send(.itemAction(id: item.id, childAction))
+          }
+        }
+        return .none
+        
+      case .itemAction(id: let id, let action):
+        switch action {
+        case .tapped:
+          // handle tap action ...
+          return .none
+
+        default:
+          return .none
+
+        }
+      }
+    }
+  }
+}
+
+struct Item: Reducer {
+  struct State: Equatable, Identifiable {
+    let id: String
+    var text: String? = nil
+  }
+  
+  enum Action {
+    case initialized
+    case contentFetched(String)
+    case tapped
+  }
+  
+  @MainActor static func store(_ initialState: State, delegatedActionHandler: @escaping (@MainActor (Action) -> Void)) -> StoreOf<Self> {
+    return Store(initialState: initialState, initialAction: .initialized, delegateActionHandler: delegatedActionHandler) { state, action, send in
+      switch action {
+      case .initialized:
+        return .run { [id = state.id] send in
+          await send(.contentFetched("Content of \(id) fetched at \(Date())"))
+        }
+        
+      case .contentFetched(let content):
+        state.text = content
+        return .none
+        
+      case .tapped:
+        return .none
+
+      }
+    }
+  }
+}
+
 ```
 
 ## License
