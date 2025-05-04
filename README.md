@@ -138,8 +138,8 @@ struct Child: Reducer {
   enum Action: Sendable {
     case valueUpdated(Int)
   }
-  @MainActor static func store() -> StoreOf<Self> {
-    return Store(initialState: State()) { state, action, send in
+  @MainActor static func store(_ initialState: State = State()) -> StoreOf<Self> {
+    return Store(initialState: initialState) { state, action, send in
       switch action {
       case .valueUpdated(let value):
         state.value = value
@@ -152,13 +152,31 @@ struct Child: Reducer {
 struct Parent: Reducer {
   struct State: Equatable {
     var value = 0
+    var child: StoreOf<Child>? = nil
   }
   enum Action {
+    case showChild(Int)
+    case hideChild
     case childActions(Child.Action)
   }
-  @MainActor static func store(childStore: StoreOf<Child>) -> StoreOf<Self> {
+  @MainActor static func store() -> StoreOf<Self> {
     return StoreOf<Self>(initialState: State()) { state, action, send in
       switch action {
+      case .showChild(let value):
+        if let child = state.child {
+          child.send(.valueUpdated(value))
+        } else {
+          state.child = Child.store(.init(value: value))
+          state.child?.delegatedActionHandler = { childAction in
+            send(.childActions(childAction))
+          }
+        }
+        return .none
+        
+      case .hideChild:
+        state.child = nil
+        return .none
+
       case .childActions(let childAction):
         switch childAction {
         case .valueUpdated(let value):
@@ -166,9 +184,7 @@ struct Parent: Reducer {
           return .none
         }
       }
-    }
-    .handleActions(from: childStore) { action in
-      .childActions(action)
+
     }
   }
 }
