@@ -196,7 +196,7 @@ Compared to TCA, this library doesn't offer `.scope()`.
 
 But we can still main the relationship between parent and children stores even when there is a list of dynamically updating children, as illustrated in this example.
 
-Here is a [diff view](https://www.diffchecker.com/72IcVeYg/) between TCA vs Swift Mini Redux. TCA makes it slightly simpler through `.scope()` but the difference is small.
+Here is a [diff view](https://www.diffchecker.com/UVNC9pZ1/) between TCA vs Swift Mini Redux. TCA makes it slightly simpler through `.scope()` but the difference is small.
 
 ```swift
 struct List: Reducer {
