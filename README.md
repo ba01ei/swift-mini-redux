@@ -55,7 +55,7 @@ struct CounterView: View {
 
 ### Async side effect
 
-Return a Task in the reducer function to run asynchronously, and call send when the result is ready
+Return a Task in the reducer function to run asynchronously, and call `send()` when the result is ready to trigger another action to update the state.
 
 ```swift
 struct RandomQuote: Reducer {
@@ -130,28 +130,18 @@ You can also return an effect based on a Combine publisher.
 
 ### Interactions between two stores 
 
+This allows the parent to handle some actions from a child view.
+
+Also, if a parent store's state have a child store property, and the changes to the internal value of the child store won't trigger the state update of the parent store. This is because the `Equatable` comparison result of stores only depend on their initial states. Because of this, by creating child stores and child views, we can avoid unnecessary re-renders of the views.
+
+Although this is not as magical as `@Observable` or TCA's `@ObservableState` which automatically tracks which state properties is observed by each view, it still gets the job done in most cases, and the benefit is a much simpler library and arguably lower risk.
+
 ```swift
-struct Child: Reducer {
-  struct State: Equatable {
-    var value = 0
-  }
-  enum Action: Sendable {
-    case valueUpdated(Int)
-  }
-  @MainActor static func store(_ initialState: State = State()) -> StoreOf<Self> {
-    return Store(initialState: initialState) { state, action, send in
-      switch action {
-      case .valueUpdated(let value):
-        state.value = value
-        return .none
-      }
-    }
-  }
-}
 
 struct Parent: Reducer {
   struct State: Equatable {
     var value = 0
+    /// If the child store makes changes to the child state, parent store's state won't trigger updates in the parent view
     var child: StoreOf<Child>? = nil
   }
   enum Action {
@@ -185,6 +175,24 @@ struct Parent: Reducer {
         }
       }
 
+    }
+  }
+}
+
+struct Child: Reducer {
+  struct State: Equatable {
+    var value = 0
+  }
+  enum Action: Sendable {
+    case valueUpdated(Int)
+  }
+  @MainActor static func store(_ initialState: State = State()) -> StoreOf<Self> {
+    return Store(initialState: initialState) { state, action, send in
+      switch action {
+      case .valueUpdated(let value):
+        state.value = value
+        return .none
+      }
     }
   }
 }
