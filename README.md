@@ -192,45 +192,6 @@ struct Parent: Reducer {
 
 ### A list of child stores
 ```swift
-struct Cell: Reducer {
-  struct State: Equatable, Identifiable {
-    let id: Int
-    var text: String? = nil
-  }
-  
-  enum Action {
-    case onAppear // sent in View.onAppear
-    case onDisappear // sent in View.onDisappear
-    case contentFetched(String)
-    case tapped
-  }
-  
-  @MainActor static func store(_ initialState: State, delegatedActionHandler: @escaping @MainActor @Sendable (Action) -> Void) -> StoreOf<Self> {
-    return Store(initialState: initialState, delegateActionHandler: delegatedActionHandler) { state, action, send in
-      switch action {
-      case .onAppear:
-        return .run { [id = state.id] send in
-          await send(.contentFetched("Content of \(id) fetched at \(Date())"))
-        }
-        .cancellable(id: "cancellable")
-        
-      case .onDisappear:
-        // also clean up memory intensive resources
-        // when view moves out of visible area
-        return .cancel(id: "cancellable")
-        
-      case .contentFetched(let content):
-        state.text = content
-        return .none
-        
-      case .tapped:
-        return .none
-
-      }
-    }
-  }
-}
-
 struct List: Reducer {
   struct State: Equatable {
     /// Child stores can live in the state of their parents.
@@ -240,7 +201,7 @@ struct List: Reducer {
   
   enum Action {
     case initialized
-    case fetchRequested
+    case fetchRequested(Int)
     case itemsFetched([Cell.State])
     case cellAction(id: Int, Cell.Action)
   }
@@ -252,15 +213,17 @@ struct List: Reducer {
       case .initialized:
         return .run { send in
           // simulate periodical content update
+          var index = 0
           while true {
-            await send(.fetchRequested)
+            await send(.fetchRequested(index))
             try? await Task.sleep(for: .seconds(1))
+            index += 1
           }
         }
 
-      case .fetchRequested:
-        return .run { [state] send in
-          await send(.itemsFetched(state.cellStores.map { Cell.State(id: $0.id) } + [.init(id: (state.cellStores.last?.id ?? 0) + 1)]))
+      case .fetchRequested(let count):
+        return .run { send in
+          await send(.itemsFetched((0..<count).map { Cell.State(id: $0) }))
         }
         .cancellable(id: "fetch", cancelInFlight: true)
 
@@ -284,38 +247,6 @@ struct List: Reducer {
         }
       }
     }
-  }
-}
-
-
-
-struct ContentView: View {
-  
-  @ObservedObject var store = List.store()
-  
-  var body: some View {
-    VStack {
-      ScrollView {
-        VStack {
-          ForEach(store.state.cellStores) { cellStore in
-            CellView(store: cellStore)
-          }
-        }
-      }
-    }
-    .padding()
-  }
-}
-
-struct CellView: View {
-  @ObservedObject var store: StoreOf<Cell>
-  var body: some View {
-    Text(store.state.text ?? "")
-      .onTapGesture {
-        store.send(.tapped)
-      }
-      .onAppear { store.send(.onAppear) }
-      .onDisappear { store.send(.onDisappear) }
   }
 }
 ```
