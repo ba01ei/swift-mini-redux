@@ -195,7 +195,7 @@ struct Parent: Reducer {
 struct List: Reducer {
   struct State: Equatable {
     /// Child stores can live in the state of their parents.
-    /// Updates of child item's store's state won't cause the parent or siblings to re-render 
+    /// Updates of child item's store's state won't cause the parent or siblings to re-render
     var items: [StoreOf<Item>] = []
   }
   
@@ -216,10 +216,10 @@ struct List: Reducer {
         }
         return .none
         
-      case .itemAction(id: let id, let action):
-        switch action {
+      case .itemAction(let id, let childAction):
+        switch childAction {
         case .tapped:
-          // handle tap action ...
+          print("item \(id) tapped")
           return .none
 
         default:
@@ -243,7 +243,7 @@ struct Item: Reducer {
     case tapped
   }
   
-  @MainActor static func store(_ initialState: State, delegatedActionHandler: @escaping (@MainActor (Action) -> Void)) -> StoreOf<Self> {
+  @MainActor static func store(_ initialState: State, delegatedActionHandler: @escaping @MainActor @Sendable (Action) -> Void) -> StoreOf<Self> {
     return Store(initialState: initialState, initialAction: .initialized, delegateActionHandler: delegatedActionHandler) { state, action, send in
       switch action {
       case .initialized:
