@@ -130,9 +130,9 @@ You can also return an effect based on a Combine publisher.
 
 ### Interactions between two stores 
 
-This allows the parent to handle some actions from a child view.
+This example shows how a parent store can communicate with a child store in both directions.
 
-Also, if a parent store's state have a child store property, and the changes to the internal value of the child store won't trigger the state update of the parent store. This is because the `Equatable` comparison result of stores only depend on their initial states. Because of this, by creating child stores and child views, we can avoid unnecessary re-renders of the views.
+If a parent store's state have a child store property, and the changes to the internal value of the child store won't trigger the state update of the parent store. This is because the `Equatable` comparison result of stores only depend on their initial states. Because of this, by creating child stores and child views, we can avoid unnecessary re-renders of the views.
 
 Although this is not as magical as `@Observable` or TCA's `@ObservableState` which automatically tracks which state properties is observed by each view, it still gets the job done in most cases, and the benefit is a much simpler library and arguably lower risk.
 
