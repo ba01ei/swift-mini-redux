@@ -175,7 +175,7 @@ struct Parent: Reducer {
 ```
 
 ### A list of child stores
-```
+```swift
 struct List: Reducer {
   struct State: Equatable {
     /// Child stores can live in the state of their parents.
