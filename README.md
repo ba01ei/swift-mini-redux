@@ -192,64 +192,32 @@ struct Parent: Reducer {
 
 ### A list of child stores
 ```swift
-struct List: Reducer {
-  struct State: Equatable {
-    /// Child stores can live in the state of their parents.
-    /// Updates of child item's store's state won't cause the parent or siblings to re-render
-    var items: [StoreOf<Item>] = []
-  }
-  
-  enum Action {
-    case itemsFetched([Item.State])
-    case itemAction(id: String, Item.Action)
-  }
-  
-  @MainActor static func store() -> StoreOf<Self> {
-    return Store(initialState: State()) { state, action, send in
-      switch action {
-
-      case .itemsFetched(let items):
-        updateList(originals: &state.items, newItems: items) { @MainActor item in
-          return Item.store(item) { childAction in
-            send(.itemAction(id: item.id, childAction))
-          }
-        }
-        return .none
-        
-      case .itemAction(let id, let childAction):
-        switch childAction {
-        case .tapped:
-          print("item \(id) tapped")
-          return .none
-
-        default:
-          return .none
-
-        }
-      }
-    }
-  }
-}
-
-struct Item: Reducer {
+struct Cell: Reducer {
   struct State: Equatable, Identifiable {
-    let id: String
+    let id: Int
     var text: String? = nil
   }
   
   enum Action {
-    case initialized
+    case onAppear // sent in View.onAppear
+    case onDisappear // sent in View.onDisappear
     case contentFetched(String)
     case tapped
   }
   
   @MainActor static func store(_ initialState: State, delegatedActionHandler: @escaping @MainActor @Sendable (Action) -> Void) -> StoreOf<Self> {
-    return Store(initialState: initialState, initialAction: .initialized, delegateActionHandler: delegatedActionHandler) { state, action, send in
+    return Store(initialState: initialState, delegateActionHandler: delegatedActionHandler) { state, action, send in
       switch action {
-      case .initialized:
+      case .onAppear:
         return .run { [id = state.id] send in
           await send(.contentFetched("Content of \(id) fetched at \(Date())"))
         }
+        .cancellable(id: "cancellable")
+        
+      case .onDisappear:
+        // also clean up memory intensive resources
+        // when view moves out of visible area
+        return .cancel(id: "cancellable")
         
       case .contentFetched(let content):
         state.text = content
@@ -263,6 +231,93 @@ struct Item: Reducer {
   }
 }
 
+struct List: Reducer {
+  struct State: Equatable {
+    /// Child stores can live in the state of their parents.
+    /// Updates of child item's store's state won't cause the parent or siblings to re-render
+    var cellStores: [StoreOf<Cell>] = []
+  }
+  
+  enum Action {
+    case initialized
+    case fetchRequested
+    case itemsFetched([Cell.State])
+    case cellAction(id: Int, Cell.Action)
+  }
+  
+  @MainActor static func store() -> StoreOf<Self> {
+    return Store(initialState: State(), initialAction: .initialized) { state, action, send in
+      switch action {
+        
+      case .initialized:
+        return .run { send in
+          // simulate periodical content update
+          while true {
+            await send(.fetchRequested)
+            try? await Task.sleep(for: .seconds(1))
+          }
+        }
+
+      case .fetchRequested:
+        return .run { [state] send in
+          await send(.itemsFetched(state.cellStores.map { Cell.State(id: $0.id) } + [.init(id: (state.cellStores.last?.id ?? 0) + 1)]))
+        }
+        .cancellable(id: "fetch", cancelInFlight: true)
+
+      case .itemsFetched(let items):
+        updateList(originals: &state.cellStores, newItems: items) { @MainActor item in
+          return Cell.store(item) { cellAction in
+            send(.cellAction(id: item.id, cellAction))
+          }
+        }
+        return .none
+        
+      case .cellAction(let id, let cellAction):
+        switch cellAction {
+        case .tapped:
+          print("item \(id) tapped")
+          return .none
+
+        default:
+          return .none
+
+        }
+      }
+    }
+  }
+}
+
+
+
+struct ContentView: View {
+  
+  @ObservedObject var store = List.store()
+  
+  var body: some View {
+    VStack {
+      ScrollView {
+        VStack {
+          ForEach(store.state.cellStores) { cellStore in
+            CellView(store: cellStore)
+          }
+        }
+      }
+    }
+    .padding()
+  }
+}
+
+struct CellView: View {
+  @ObservedObject var store: StoreOf<Cell>
+  var body: some View {
+    Text(store.state.text ?? "")
+      .onTapGesture {
+        store.send(.tapped)
+      }
+      .onAppear { store.send(.onAppear) }
+      .onDisappear { store.send(.onDisappear) }
+  }
+}
 ```
 
 ## License
