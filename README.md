@@ -209,57 +209,69 @@ Here is a [diff view](https://www.diffchecker.com/UVNC9pZ1/) between TCA vs Swif
 ```swift
 struct List: Reducer {
   struct State: Equatable {
-    /// Child stores can live in the state of their parents.
-    /// Updates of child item's store's state won't cause the parent or siblings to re-render
-    var cellStores: [StoreOf<Cell>] = []
+    var items: [StoreOf<Item>] = []
+    var lastTapped: String? = nil
   }
   
   enum Action {
-    case initialized
-    case fetchRequested(Int)
-    case itemsFetched([Cell.State])
-    case cellAction(id: Int, Cell.Action)
+    case itemsFetched([Item.State])
+    case itemAction(id: String, Item.Action)
   }
   
   @MainActor static func store() -> StoreOf<Self> {
-    return Store(initialState: State(), initialAction: .initialized) { state, action, send in
+    return Store(initialState: State()) { state, action, send in
       switch action {
-        
-      case .initialized:
-        return .run { send in
-          // simulate periodical content update
-          var index = 0
-          while true {
-            await send(.fetchRequested(index))
-            try? await Task.sleep(for: .seconds(1))
-            index += 1
-          }
-        }
-
-      case .fetchRequested(let count):
-        return .run { send in
-          await send(.itemsFetched((0..<count).map { Cell.State(id: $0) }))
-        }
-        .cancellable(id: "fetch", cancelInFlight: true)
 
       case .itemsFetched(let items):
-        updateList(originals: &state.cellStores, newItems: items) { @MainActor item in
-          return Cell.store(item) { cellAction in
-            send(.cellAction(id: item.id, cellAction))
+        state.items.updateInPlace(newItems: items) { _, item in
+          return Item.store(item).delegate { childAction in
+            send(.itemAction(id: item.id, childAction))
           }
         }
         return .none
         
-      case .cellAction(let id, let cellAction):
-        switch cellAction {
+      case .itemAction(id: let id, let action):
+        switch action {
         case .tapped:
-          print("item \(id) tapped")
+          state.lastTapped = id
           return .none
 
         default:
           return .none
 
         }
+      }
+    }
+  }
+}
+
+struct Item: Reducer {
+  struct State: Equatable, Identifiable {
+    let id: String
+    var text: String? = nil
+  }
+  
+  enum Action {
+    case initialized
+    case contentFetched(String)
+    case tapped
+  }
+  
+  @MainActor static func store(_ initialState: State) -> StoreOf<Self> {
+    return Store(initialState: initialState, initialAction: .initialized) { state, action, send in
+      switch action {
+      case .initialized:
+        return .run { [id = state.id] send in
+          await send(.contentFetched("Content of \(id) fetched at \(Date())"))
+        }
+        
+      case .contentFetched(let content):
+        state.text = content
+        return .none
+        
+      case .tapped:
+        return .none
+
       }
     }
   }

@@ -27,8 +27,8 @@ import Testing
         switch action {
 
         case .itemsFetched(let items):
-          updateList(originals: &state.items, newItems: items) { @MainActor item in
-            return Item.store(item) { childAction in
+          state.items.updateInPlace(newItems: items) { _, item in
+            return Item.store(item).delegate { childAction in
               send(.itemAction(id: item.id, childAction))
             }
           }
@@ -61,8 +61,8 @@ import Testing
       case tapped
     }
     
-    @MainActor static func store(_ initialState: State, delegatedActionHandler: @escaping (@MainActor (Action) -> Void)) -> StoreOf<Self> {
-      return Store(initialState: initialState, initialAction: .initialized, delegateActionHandler: delegatedActionHandler) { state, action, send in
+    @MainActor static func store(_ initialState: State) -> StoreOf<Self> {
+      return Store(initialState: initialState, initialAction: .initialized) { state, action, send in
         switch action {
         case .initialized:
           return .run { [id = state.id] send in
