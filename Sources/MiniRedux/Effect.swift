@@ -6,7 +6,7 @@ import Combine
 /// - We can use either `.run(id: "a") { ... }` or `.run { ... }.cancellable(id: "a")`. They are the same.
 public enum Effect<Action: Sendable> {
   case none
-  case run(id: String? = nil, cancelInFlight: Bool = false, _ run: @MainActor ((Action) async -> Void) async -> Void)
+  case run(id: String? = nil, cancelInFlight: Bool = false, _ run: @Sendable ((Action) async -> Void) async -> Void)
   case publisher(id: String? = nil, cancelInFlight: Bool = false, _ publisher: any Publisher<Action, Never>)
   case cancel(id: String)
   case merge(id: String? = nil, cancelInFlight: Bool = false, [Self])
