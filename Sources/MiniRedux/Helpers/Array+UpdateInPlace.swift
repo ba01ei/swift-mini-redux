@@ -12,6 +12,11 @@ extension Array where Element: Identifiable {
     updateInPlace(newItems: newItems, newItemId: \.id, filter: filter, create: create)
   }
   
+  /// Update a list in place, re-use existing items as much as possible
+  /// This is useful for refreshing a list of stores based on new states fetched.
+  ///  - parameter newItemId: the closure or keypath to return an id from the newItems' item, to match with the ID in original array
+  ///  - parameter create: the closure to create new elements for the array, called only when necessary.
+  ///  - parameter filter: only update the items that passes the check. This allows the scenario where newItems should only cover a subset of the original list
   public mutating func updateInPlace<NewItem>(
     newItems: [NewItem],
     newItemId: (NewItem) -> Element.ID,

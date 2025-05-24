@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 
 /// For simplicity of the implemenation:
 /// - If `.merge` has an `id`, then the top level `id` will be used for all effects inside the merge.
@@ -7,7 +8,7 @@ import Combine
 public enum Effect<Action: Sendable> {
   case none
   case run(id: String? = nil, cancelInFlight: Bool = false, _ run: @Sendable ((Action) async -> Void) async -> Void)
-  case publisher(id: String? = nil, cancelInFlight: Bool = false, _ publisher: any Publisher<Action, Never>)
+  case publisher(id: String? = nil, cancelInFlight: Bool = false, _ publisher: () -> any Publisher<Action, Never>)
   case cancel(id: String)
   case merge(id: String? = nil, cancelInFlight: Bool = false, [Self])
 
@@ -36,7 +37,7 @@ public enum Effect<Action: Sendable> {
       if let id, cancelInFlight {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
       }
-      publisher.sink { action in
+      publisher().sink { action in
         Task {
           await send(action)
         }

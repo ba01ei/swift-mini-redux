@@ -1,4 +1,3 @@
-@preconcurrency import Combine
 import Testing
 import Foundation
 import MiniRedux

@@ -1,10 +1,3 @@
-//
-//  UpdateInPlace.swift
-//  swift-mini-redux
-//
-//  Created by Bao Lei on 5/24/25.
-//
-
 import MiniRedux
 import Testing
 
