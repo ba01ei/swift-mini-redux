@@ -7,10 +7,18 @@ import Foundation
 /// - We can use either `.run(id: "a") { ... }` or `.run { ... }.cancellable(id: "a")`. They are the same.
 public enum Effect<Action: Sendable> {
   case none
-  case run(id: String? = nil, cancelInFlight: Bool = false, _ run: @Sendable ((Action) async -> Void) async -> Void)
+  case run(id: String?, cancelInFlight: Bool = false, _ run: @Sendable ((Action) async -> Void) async -> Void)
   case publisher(id: String? = nil, cancelInFlight: Bool = false, _ publisher: () -> any Publisher<Action, Never>)
   case cancel(id: String)
-  case merge(id: String? = nil, cancelInFlight: Bool = false, [Self])
+  case merge(id: String?, cancelInFlight: Bool = false, [Self])
+  
+  @inlinable public static func merge(_ effects: Self...) -> Effect {
+    return .merge(id: nil, effects)
+  }
+  
+  @inlinable public static func run(_ operation: @escaping @Sendable ((Action) async -> Void) async -> Void) -> Effect {
+    return .run(id: nil, operation)
+  }
 
   func perform(
     cancellablesDict: inout [String: Set<AnyCancellable>], send: @escaping @MainActor (Action) async -> Void
