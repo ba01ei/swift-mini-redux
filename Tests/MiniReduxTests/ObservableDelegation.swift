@@ -10,22 +10,20 @@ import Testing
 import Observation
 import Combine
 
-@Observable class ChildStore: ObservableStore {
-  var delegatedActionHandler: ((Action) -> Void)?
-  var cancellables: [String : Set<AnyCancellable>] = [:]
+@Observable class ChildStore: BaseStore<ChildStore.Action> {
   
   var value = 0
 
   init(value: Int = 0, delegatedActionHandler: ((Action) -> Void)?) {
-    self.delegatedActionHandler = delegatedActionHandler
     self.value = value
+    super.init(delegatedActionHandler: delegatedActionHandler)
   }
 
   enum Action: Sendable {
     case valueUpdated(Int)
   }
 
-  func reduce(_ action: Action) -> Effect<Action> {
+  override func reduce(_ action: Action) -> Effect<Action> {
     switch action {
     case .valueUpdated(let value):
       self.value = value
@@ -34,9 +32,7 @@ import Combine
   }
 }
 
-@Observable class ParentStore: ObservableStore {
-  var delegatedActionHandler: ((Action) -> Void)?
-  var cancellables: [String : Set<AnyCancellable>] = [:]
+@Observable class ParentStore: BaseStore<ParentStore.Action> {
   
   var value = 0
   var child: ChildStore? = nil
@@ -46,7 +42,7 @@ import Combine
     case hideChild
     case childActions(ChildStore.Action)
   }
-  func reduce(_ action: Action) -> Effect<Action> {
+  override func reduce(_ action: Action) -> Effect<Action> {
     switch action {
     case .showChild(let value):
       if let child {

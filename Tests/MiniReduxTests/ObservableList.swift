@@ -10,7 +10,7 @@ import SwiftUI
 import Testing
 import Combine
 
-@Observable class ListStore: ObservableStore {
+@Observable class ListStore: BaseStore<ListStore.Action> {
   // MARK: State
   var items: [ItemStore] = []
   var lastTapped: String? = nil
@@ -21,7 +21,7 @@ import Combine
     case itemAction(id: String, ItemStore.Action)
   }
   
-  func reduce(_ action: Action) -> Effect<Action> {
+  override func reduce(_ action: Action) -> Effect<Action> {
     switch action {
       
     case .itemsFetched(let fetchedItems):
@@ -44,19 +44,15 @@ import Combine
       }
     }
   }
-  
-  // MARK: Comformance
-  var delegatedActionHandler: ((Action) -> Void)?
-  var cancellables: [String : Set<AnyCancellable>] = [:]
 }
 
-@Observable class ItemStore: ObservableStore, Identifiable {
+@Observable class ItemStore: BaseStore<ItemStore.Action>, Identifiable {
   let id: String
   var text: String? = nil
   init(id: String, text: String? = nil, delegatedActionHandler: ((Action) -> Void)? = nil) {
     self.id = id
     self.text = text
-    self.delegatedActionHandler = delegatedActionHandler
+    super.init(delegatedActionHandler: delegatedActionHandler)
     send(.initialized)
   }
   
@@ -66,7 +62,7 @@ import Combine
     case tapped
   }
   
-  func reduce(_ action: Action) -> Effect<Action> {
+  override func reduce(_ action: Action) -> Effect<Action> {
     switch action {
     case .initialized:
       return .run { [id] send in
@@ -81,11 +77,7 @@ import Combine
       return .none
       
     }
-  }
-  
-  var delegatedActionHandler: ((Action) -> Void)?
-  var cancellables: [String : Set<AnyCancellable>] = [:]
-  
+  }  
 }
 
 @Test func observableList() async throws {

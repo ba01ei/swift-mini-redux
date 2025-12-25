@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Observation
 
 /**
  A protocol for a Store object that can be observable by a SwiftUI View.
@@ -14,7 +15,7 @@ import Combine
  import SwiftUI
  import Combine // this is needed for AnyCancellable
  
- @Observable class AStore: ObservableStore {
+ @Observable class AStore: BaseStore<AStore.Action> {
    // MARK: - State
    var text = ""
    var number = 1
@@ -25,17 +26,13 @@ import Combine
    }
  
    // MARK: - Reducer
-   func reduce(_ action: Action) -> Effect<Action> {
+   override func reduce(_ action: Action) -> Effect<Action> {
      switch action {
        case .action1:
          store.text = "..."
          return .none
      }
    }
- 
-   // MARK: - Protocol conformance
-   var delegatedActionHandler: ((Action) -> Void)?
-   var cancellables: [String : Set<AnyCancellable>] = [:]
  }
  
  struct AView: View {
@@ -51,6 +48,21 @@ import Combine
   func reduce(_ action: Action) -> Effect<Action>
   var delegatedActionHandler: ((Action) -> Void)? { get }
   var cancellables: [String: Set<AnyCancellable>] { get set }
+}
+
+@available(macOS 14.0, iOS 17.0, *)
+@Observable open class BaseStore<Action>: ObservableStore {
+  public init(delegatedActionHandler: ((Action) -> Void)? = nil) {
+    self.delegatedActionHandler = delegatedActionHandler
+  }
+
+  open func reduce(_ action: Action) -> Effect<Action> {
+    // to be implemented by subclass
+    fatalError("not implemented")
+  }
+
+  @ObservationIgnored public var delegatedActionHandler: ((Action) -> Void)?
+  @ObservationIgnored public var cancellables: [String : Set<AnyCancellable>] = [:]
 }
 
 extension ObservableStore {

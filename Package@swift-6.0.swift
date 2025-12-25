@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "swift-mini-redux",
     platforms: [
-      .iOS(.v13),
+      .iOS(.v17),
       .macOS(.v10_15),
       .tvOS(.v13),
       .watchOS(.v6),

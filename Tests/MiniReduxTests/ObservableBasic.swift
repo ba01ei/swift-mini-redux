@@ -3,18 +3,15 @@ import Foundation
 import MiniRedux
 import Combine
 
-@Observable class CounterStore: ObservableStore {
-  var delegatedActionHandler: ((Action) -> Void)?
-  var cancellables: [String : Set<AnyCancellable>] = [:]
-  
+@Observable class CounterStore: BaseStore<CounterStore.Action> {
   var count = 0
 
   enum Action {
     case incrementTapped
     case incrementLaterTapped
   }
-  
-  func reduce(_ action: Action) -> Effect<Action> {
+
+  override func reduce(_ action: Action) -> Effect<Action> {
     switch action {
     case .incrementTapped:
       count += 1
