@@ -13,8 +13,8 @@ import Observation
  A protocol for a Store object that can be observable by a SwiftUI View.
  Usage:
  ```
+ import MiniRedux
  import SwiftUI
- import Combine // this is needed for AnyCancellable
  
  @Observable class AStore: BaseStore<AStore.Action> {
    // MARK: - State
