@@ -5,6 +5,10 @@ import Combine
 
 @Observable class CounterStore: BaseStore<CounterStore.Action> {
   var count = 0
+  
+  init(count: Int = 0) {
+    self.count = count
+  }
 
   enum Action {
     case incrementTapped
@@ -31,7 +35,7 @@ import Combine
   #expect(await store.count == 1)
   
   await store.send(.incrementLaterTapped)
-  await expectWithDelay { await store.count == 2 }
+  await expectWithDelay { await store.reflection == CounterStore(count: 2).reflection }
 }
 
 // MARK: - Helper

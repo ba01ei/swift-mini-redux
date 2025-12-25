@@ -5,6 +5,7 @@
 //  Created by Bao Lei on 12/24/25.
 //
 
+import Foundation
 import Combine
 import Observation
 
@@ -50,6 +51,41 @@ import Observation
   var cancellables: [String: Set<AnyCancellable>] { get set }
 }
 
+extension ObservableStore {
+  /// Send an action to the store. The action will be processed by the reduce function.
+  public func send(_ action: Action) {
+    let result = reduce(action)
+    result.perform(cancellablesDict: &cancellables, send: { [weak self] a in
+      self?.send(a)
+    })
+
+    delegatedActionHandler?(action)
+  }
+  
+  /// A key value representation of the state for unit testing and debugging.
+  /// To track state change, at the end of the reducer, add something like:
+  /// `print("\(self) received action: \(action). new state: \(reflection)")`
+  public var reflection: [String: String] {
+    let mirror = Mirror(reflecting: self)
+    return mirror.children.reduce(into: [:]) { dict, child in
+      guard let label = child.label else { return }
+      if label.starts(with: "_") && !label.contains("$") {
+        var valueStr: String
+        if let childStore = child.value as? any ObservableStore {
+          let encoder = JSONEncoder()
+          encoder.outputFormatting = [.sortedKeys]
+          valueStr = String(data: (try? encoder.encode(childStore.reflection)) ?? Data(), encoding: .utf8) ?? "<encode failure>"
+        } else {
+          // use dump to ensure key order
+          valueStr = ""
+          dump(child.value, to: &valueStr)
+        }
+        dict[label] = valueStr
+      }
+    }
+  }
+}
+
 @available(macOS 14.0, iOS 17.0, *)
 @Observable open class BaseStore<Action>: ObservableStore {
   public init(delegatedActionHandler: ((Action) -> Void)? = nil) {
@@ -63,15 +99,4 @@ import Observation
 
   @ObservationIgnored public var delegatedActionHandler: ((Action) -> Void)?
   @ObservationIgnored public var cancellables: [String : Set<AnyCancellable>] = [:]
-}
-
-extension ObservableStore {
-  public func send(_ action: Action) {
-    let result = reduce(action)
-    result.perform(cancellablesDict: &cancellables, send: { [weak self] a in
-      self?.send(a)
-    })
-
-    delegatedActionHandler?(action)
-  }
 }

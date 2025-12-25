@@ -75,11 +75,22 @@ import Combine
   #expect(parentStore.child == nil)
   
   parentStore.send(.showChild(1))
-  #expect(parentStore.child?.value == 1)
+  #expect(parentStore.child?.reflection == ChildStore(value: 1, delegatedActionHandler: nil).reflection)
   
   parentStore.child?.send(.valueUpdated(100))
-  #expect(parentStore.value == 100)
+  #expect(parentStore.reflection == {
+    let parentStore = ParentStore()
+    parentStore.value = 100
+    parentStore.child = ChildStore(value: 100, delegatedActionHandler: nil)
+    
+    return parentStore
+  }().reflection)
   
   parentStore.send(.hideChild)
-  #expect(parentStore.child == nil)
+  #expect(parentStore.reflection == {
+    let parentStore = ParentStore()
+    parentStore.value = 100
+    parentStore.child = nil
+    return parentStore
+  }().reflection)
 }
