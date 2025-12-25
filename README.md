@@ -4,6 +4,12 @@ A minimal implementation of the Redux pattern in Swift.
 
 Inspired by TCA, i.e. [The Composable Architecture by PointFree](https://github.com/pointfreeco/swift-composable-architecture).
 
+Update:
+
+As of December 2025, a new version of Store based on Swift Observable is introduced.
+
+See [documentation](Sources/MiniRedux/ObservableStore.swift)
+
 ## Examples
 
 ### Basic example

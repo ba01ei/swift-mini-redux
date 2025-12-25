@@ -34,16 +34,3 @@ import MiniRedux
   await store.send(.incrementLaterTapped)
   await expectWithDelay { await store.state.count == 2 }
 }
-
-// MARK: - Helper
-
-func expectWithDelay(timeout: TimeInterval = 1, condition: () async -> Bool) async {
-  let interval = 0.1
-  for _ in 0 ..< Int(timeout / interval) {
-    if await condition() {
-      return
-    }
-    try? await Task.sleep(nanoseconds: UInt64(1e9 * interval))
-  }
-  Issue.record("condition not met after timeout")
-}
