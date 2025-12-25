@@ -11,6 +11,9 @@ import Combine
  A protocol for a Store object that can be observable by a SwiftUI View.
  Usage:
  ```
+ import SwiftUI
+ import Combine // this is needed for AnyCancellable
+ 
  @Observable class AStore: ObservableStore {
    // MARK: - State
    var text = ""
