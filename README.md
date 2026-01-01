@@ -42,36 +42,34 @@ import SwiftUI
 struct AView: View {
   let store: AStore
   var body: some View {
-    Text(store.text) // this will be automatically observing
-    Button("...") { store.send(action1) }
+    Text(store.text) // observed automatically
+    Button("...") { store.send(.action1) }
   }
 }
 ```
 
-The idea is that instead of letting the view be driven by a view model with completely freeform logic, we adhere to a consistent pattern where:
+Rather than freeform logic in view models, we adhere to a pattern where:
 
-1. Every changeable thing displayed in the view is based on the state of the store (e.g. `store.text`)
-2. Every change of state happens from an action sent to the store (e.g. on button tap we call `store.send(Action.buttonTapped)`)
-3. Every asynchronous operation is carried out through an Effect returned by an action
+1. Every visible element is driven by the store's state (e.g., `store.text`).
+2. Every state change is triggered by an action sent to the store (e.g., `store.send(.buttonTapped)`).
+3. Every asynchronous operation is managed through an `Effect` returned by `reduce`.
 
-This pattern provides a few benefits:
+Benefits:
 
-1. It's very easy to debug what is changing the state (e.g. put a `print("\(self) received \(action)")` in reduce function)
-2. It's very easy to unit test (each action represents what a user can do. Call store.send and check if the state updates accordingly)
-3. Async operations and subscriptions to data sources are easier to follow, and adhere to Swift Concurrency
-4. Cancellations of async operations and subscriptions are automatically managed
+1. **Easy Debugging**: Track state changes by printing the `action` in `reduce`.
+2. **Testable**: Each action represents a user interaction. Call `send` and assert state updates.
+3. **Structured Concurrency**: Async operations and data subscriptions follow Swift Concurrency.
+4. **Auto-Management**: Cancellations of async tasks are handled automatically.
 
 ## How to handle interactions between a parent view and a child view
 
-A store can contain a child store.
-
-Every store has a delegate where actions will also be sent. The parent store can initialize the child store by passing a delegate action handler closure where a parent action is sent based on the child action.
+A store can contain child stores. Each store has a delegate for action forwarding. The parent initializes a child store, providing a closure to map child actions back to parent actions.
 
 See example in [this unit test](Tests/MiniReduxTests/ObservableDelegation.swift)
 
 ## How to handle a list view with each item having its own store
 
-Similar to normal parent-children interaction, the parent store can keep a list of children stores. To avoid unnecessary destruction of child stores and allow child stores to handle their own internal changes without an update on the parent store, there is an [updateInPlace](Sources/MiniRedux/Helpers/Array+UpdateInPlace.swift) helper function to ensure that as long as the child store id is not changing, then the child store object will be reused.
+The parent can maintain a list of child stores. To prevent unnecessary re-initialization and allow children to handle internal state independently, use the [updateInPlace](Sources/MiniRedux/Helpers/Array+UpdateInPlace.swift) helper. This ensures the child store object is reused as long as its ID remains constant.
 
 See example in [this unit test](Tests/MiniReduxTests/ObservableList.swift)
 
@@ -84,23 +82,23 @@ The game can be downloaded [here](https://cipher.theiosapp.com)
 
 ## Comparison to TCA
 
-TCA is a much more full-fledged framework, where as MiniRedux is a minimalist implementation. MiniRedux is a student of TCA. 
+TCA is a comprehensive framework, whereas MiniRedux is a minimalist implementation inspired by its philosophy.
 
-They are based on the same philosophy, there are different trade-offs.
+### State Management
+TCA uses a `struct` for state, providing automatic `Equatable` conformance and easier debugging. MiniRedux uses properties on a class, leveraging the Swift `@Observable` macro directly (TCA uses its own `@ObservableState`). To facilitate debugging, MiniRedux stores provide a `reflection` property to compare state changes.
 
-TCA store's state is based on a struct. MiniRedux's store's state is just a set of properties on store class. The benefit of the TCA approach is that the struct based state gets automatic equatable implementation, and ability to print a description. MiniRedux skips the state struct declaration so it can directly reuse the Swift @Observation macro to track changes (TCA achieved so through its own implementation of @ObervableState macro). To partially makeup for the equatability and debuggability, MiniRedux store provides a `reflection` property that can be used in test or debugging to compare state changes.
+### Reducer Structure
+In TCA, the reducer is a separate `struct`, favoring "composition over inheritance." MiniRedux requires subclassing `BaseStore` and overriding the `reduce` function. This reduces boilerplate by maintaining logic and state in a single type.
 
-TCA has a reducer which is its own struct. There is no need to subclass the store. It is closer to functional programming and better embodies the "composition over inheritance" principle. MiniRedux requires each store to inherit BaseStore. On the flip side, the minor benefits are: slightly less boilerplate and one less type to maintain (there is no reducer, just a reduce function that the store needs to override).
+### Composition & Scoping
+TCA uses "scoping" to derive child stores from a slice of parent state, allowing a single tree of state. In MiniRedux, children stores are directly owned by parents. While less elegant, it is simpler to implement and carries less performance overhead, and the entire state tree is still available through the `reflection` property.
 
-TCA uses a mechanism called scoping to manage interactions between parent and children stores (i.e. a child store is scoped from a subset of the parent's state'). This allows the entired tree of states from parent to each children to be representated in one struct value. With MiniRedux, children stores are directly owned by parent stores. You are still get the full state through `relection` property (but less elegant as TCA), on the flip side it's a much simpler implementation (less code and less change for a bug or performance overhead).
-
-TCA currently has much better testing infrastructure, with TestStore. MiniRedux in principle is very testable but for now provides less testing helpers. Though this can be improved in the future.
+### Testing
+TCA has mature testing infrastructure (like `TestStore`). MiniRedux is designed for testability but currently offers fewer helper utilities, which can be improved in the future.
 
 ## Pre-Observation Implementation
 
-There is an earlier implementation of this library that doesn't depend on Observable Macro and can be used below iOS 17.
-
-The state is based on a struct, more similar to TCA.
+An earlier implementation of this library exists for iOS versions below 17, which doesn't rely on the `@Observable` macro. Its state management is more similar to TCA's `struct`-based approach.
 
 ### Basic example
 
@@ -151,7 +149,7 @@ struct CounterView: View {
 
 ### Async side effect
 
-Return a Task in the reducer function to run asynchronously, and call `send()` when the result is ready to trigger another action to update the state.
+Return a `Task` in the `reduce` function to run asynchronously, calling `send()` to trigger subsequent actions.
 
 ```swift
 struct RandomQuote: Reducer {
@@ -207,9 +205,8 @@ struct RandomQuoteView: View {
 You can also return an effect based on a Combine publisher.
 
 ```swift
-@MainActor static func store() -> Store<State, Action> {
-  // when creating a store, an initialAction can be passed so it will be called when the store is initialized
-  return Store(initialState: State(), initialAction: .initialized) { state, action, _ in
+// provide an initialAction during initialization to trigger work immediately
+return Store(initialState: State(), initialAction: .initialized) { state, action, _ in
     switch action {
     case .initialized:
       return .publisher {
@@ -228,17 +225,15 @@ You can also return an effect based on a Combine publisher.
 
 This [example](Tests/MiniReduxTests/PreObervation/Delegation.swift) shows how a parent store can communicate with a child store in both directions.
 
-If a parent store's state have a child store property, and the changes to the internal value of the child store won't trigger the state update of the parent store. This is because the `Equatable` comparison result of stores only depend on their initial states. Because of this, by creating child stores and child views, we can avoid unnecessary re-renders of the views.
+If a parent store contains a child store, internal updates to the child won't automatically trigger a parent state update. This is because `Equatable` comparison for stores depends on their initial states. This separation helps prevent unnecessary view re-renders.
 
-### A list of child stores
+### Lists of child stores 
 
-Compared to TCA, this library doesn't offer `.scope()`.
+MiniRedux doesn't offer `.scope()`, but you can still maintain parent-child relationships within dynamic lists.
 
-But we can still main the relationship between parent and children stores even when there is a list of dynamically updating children, as illustrated in this example.
+Check this [comparison](https://www.diffchecker.com/8s9ip7My/) between TCA and MiniRedux. TCA's `.scope()` is slightly more concise, but the functional result is similar.
 
-Here is a [diff view](https://www.diffchecker.com/8s9ip7My/) between TCA vs Swift Mini Redux. TCA makes it slightly simpler through `.scope()` but the difference is small.
-
-See the [example in unit test](Tests/MiniReduxTests/PreObervation/List.swift)
+See the [list unit test](Tests/MiniReduxTests/PreObservation/List.swift).
 
 ## License
 
