@@ -71,6 +71,8 @@ See example in [this unit test](Tests/MiniReduxTests/ObservableDelegation.swift)
 
 ## How to handle a list view with each item having its own store
 
+Similar to normal parent-children interaction, the parent store can keep a list of children stores. To avoid unnecessary destruction of child stores and allow child stores to handle their own internal changes without an update on the parent store, there is an [updateInPlace](Sources/MiniRedux/Helpers/Array+UpdateInPlace.swift) helper function to ensure that as long as the child store id is not changing, then the child store object will be reused.
+
 See example in [this unit test](Tests/MiniReduxTests/ObservableList.swift)
 
 
