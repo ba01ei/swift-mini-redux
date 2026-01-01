@@ -50,7 +50,7 @@ struct AView: View {
 
 Rather than freeform logic in view models, we adhere to a pattern where:
 
-1. Every visible element is driven by the store's state (e.g., `store.text`).
+1. Every updatable UI element is driven by the store's state (e.g., `store.text`).
 2. Every state change is triggered by an action sent to the store (e.g., `store.send(.buttonTapped)`).
 3. Every asynchronous operation is managed through an `Effect` returned by `reduce`.
 
@@ -59,7 +59,7 @@ Benefits:
 1. **Easy Debugging**: Track state changes by printing the `action` in `reduce`.
 2. **Testable**: Each action represents a user interaction. Call `send` and assert state updates.
 3. **Structured Concurrency**: Async operations and data subscriptions follow Swift Concurrency.
-4. **Auto-Management**: Cancellations of async tasks are handled automatically.
+4. **Automatic Cancellation**: Cancellations of async tasks are handled automatically.
 
 ## How to handle interactions between a parent view and a child view
 
