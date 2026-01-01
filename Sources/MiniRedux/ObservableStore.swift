@@ -10,7 +10,7 @@ import Combine
 import Observation
 
 /**
- A protocol for a Store object that can be observable by a SwiftUI View.
+ A store based on reducer pattern that is observable by a SwiftUI View.
  Usage:
  ```
  import MiniRedux

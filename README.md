@@ -67,16 +67,16 @@ A store can contain a child store.
 
 Every store has a delegate where actions will also be sent. The parent store can initialize the child store by passing a delegate action handler closure where a parent action is sent based on the child action.
 
-See example in [this unit test](Tests/MiniReduxTests/ObervableDelegation.swift)
+See example in [this unit test](Tests/MiniReduxTests/ObservableDelegation.swift)
 
 ## How to handle a list view with each item having its own store
 
-See example in [this unit test](Tests/MiniReduxTests/ObervableList.swift)
+See example in [this unit test](Tests/MiniReduxTests/ObservableList.swift)
 
 
 ## Comparison to TCA
 
-TCA is a much more fully fledged framework, where as MiniRedux is a minimalist implementation. MiniRedux is a student of TCA. 
+TCA is a much more full-fledged framework, where as MiniRedux is a minimalist implementation. MiniRedux is a student of TCA. 
 
 They are based on the same philosophy, there are different trade-offs.
 
