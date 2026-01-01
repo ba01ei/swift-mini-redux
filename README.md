@@ -76,6 +76,12 @@ Similar to normal parent-children interaction, the parent store can keep a list 
 See example in [this unit test](Tests/MiniReduxTests/ObservableList.swift)
 
 
+## Apps using MiniRedux
+
+Cipher Challenge is a cipher decoding game built on this architecture. See the [Swift source code](https://github.com/ba01ei/cipher-app).
+
+The game can be downloaded [here](https://cipher.theiosapp.com)
+
 ## Comparison to TCA
 
 TCA is a much more full-fledged framework, where as MiniRedux is a minimalist implementation. MiniRedux is a student of TCA. 
@@ -89,12 +95,6 @@ TCA has a reducer which is its own struct. There is no need to subclass the stor
 TCA uses a mechanism called scoping to manage interactions between parent and children stores (i.e. a child store is scoped from a subset of the parent's state'). This allows the entired tree of states from parent to each children to be representated in one struct value. With MiniRedux, children stores are directly owned by parent stores. You are still get the full state through `relection` property (but less elegant as TCA), on the flip side it's a much simpler implementation (less code and less change for a bug or performance overhead).
 
 TCA currently has much better testing infrastructure, with TestStore. MiniRedux in principle is very testable but for now provides less testing helpers. Though this can be improved in the future.
-
-## Apps using MiniRedux
-
-Cipher Challenge is a cipher decoding game built on this architecture. See the [Swift source code](https://github.com/ba01ei/cipher-app).
-
-The game can be downloaded [here](https://cipher.theiosapp.com)
 
 ## Pre-Observation Implementation
 
