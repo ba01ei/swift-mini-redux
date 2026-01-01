@@ -90,6 +90,12 @@ TCA uses a mechanism called scoping to manage interactions between parent and ch
 
 TCA currently has much better testing infrastructure, with TestStore. MiniRedux in principle is very testable but for now provides less testing helpers. Though this can be improved in the future.
 
+## Apps using MiniRedux
+
+Cipher Challenge is a cipher decoding game built on this architecture. See the [Swift source code](https://github.com/ba01ei/cipher-app).
+
+The game can be downloaded [here](https://cipher.theiosapp.com)
+
 ## Pre-Observation Implementation
 
 There is an earlier implementation of this library that doesn't depend on Observable Macro and can be used below iOS 17.
