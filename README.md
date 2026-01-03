@@ -80,6 +80,8 @@ Cipher Challenge is a cipher decoding game built on this architecture. See the [
 
 The game can be downloaded [here](https://cipher.theiosapp.com)
 
+Fitness Habit Tracker is another app built on this architecture. Download it [here](https://apps.apple.com/app/id6756836629).
+
 ## Comparison to TCA
 
 TCA is a comprehensive framework, whereas MiniRedux is a minimalist implementation inspired by its philosophy.
