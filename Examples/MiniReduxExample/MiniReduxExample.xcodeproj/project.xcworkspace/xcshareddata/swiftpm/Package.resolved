@@ -1,0 +1,15 @@
+{
+  "originHash" : "97f36ef1358cefb4101c546bf75173610e4e9faf5324fe648f4dcb483edf1a87",
+  "pins" : [
+    {
+      "identity" : "swift-mini-redux",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ba01ei/swift-mini-redux",
+      "state" : {
+        "revision" : "ce7817f2df8e7deaed8cc481fc512b9e6e5b52eb",
+        "version" : "0.2.2"
+      }
+    }
+  ],
+  "version" : 3
+}
