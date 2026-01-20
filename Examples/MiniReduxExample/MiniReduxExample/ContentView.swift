@@ -20,8 +20,14 @@ struct ContentView: View {
       Button("Fetch Random Quote") {
         store.send(.fetchQuoteTapped)
       }
+      Button("Show a table") {
+        store.send(.showTableTapped)
+      }
     }
     .padding()
+    .sheet(isPresented: $store.showTable) {
+      TableView()
+    }
   }
 }
 

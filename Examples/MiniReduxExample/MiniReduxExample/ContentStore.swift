@@ -15,11 +15,13 @@ class ContentStore: BaseStore<ContentStore.Action> {
   // MARK: - State
   var loading = false
   var quote = ""
+  var showTable = false
   
   // MARK: - Action
   enum Action {
     case fetchQuoteTapped
     case quoteFetched(String)
+    case showTableTapped
   }
   
   // MARK: - Reducer
@@ -44,6 +46,10 @@ class ContentStore: BaseStore<ContentStore.Action> {
     case .quoteFetched(let quote):
       loading = false
       self.quote = quote
+      return .none
+
+    case .showTableTapped:
+      showTable = true
       return .none
 
     }
