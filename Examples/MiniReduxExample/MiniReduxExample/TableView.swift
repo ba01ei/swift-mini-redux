@@ -13,7 +13,7 @@ struct TableView: View {
             .padding()
         }
         Spacer()
-        Button("Add") {
+        Button("Add a quote") {
           store.send(.addTapped)
         }
         .padding()

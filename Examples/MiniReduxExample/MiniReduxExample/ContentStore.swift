@@ -22,6 +22,9 @@ class ContentStore: BaseStore<ContentStore.Action> {
     case fetchQuoteTapped
     case quoteFetched(String)
     case showTableTapped
+    
+    // child action
+    case table(TableStore.Action)
   }
   
   // MARK: - Reducer
@@ -49,9 +52,19 @@ class ContentStore: BaseStore<ContentStore.Action> {
       return .none
 
     case .showTableTapped:
-      tableStore = TableStore()
+      tableStore = TableStore() { [weak self] tableAction in
+        self?.send(.table(tableAction))
+      }
       return .none
 
+    case .table(let tableAction):
+      switch tableAction {
+      case .quoteFetched(let quote):
+        self.quote = quote
+      default:
+        break
+      }
+      return .none
     }
   }
 }
