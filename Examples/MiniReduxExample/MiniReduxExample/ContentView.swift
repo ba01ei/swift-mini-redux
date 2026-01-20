@@ -25,8 +25,8 @@ struct ContentView: View {
       }
     }
     .padding()
-    .sheet(isPresented: $store.showTable) {
-      TableView()
+    .sheet(item: $store.tableStore) { tableStore in
+      TableView(store: tableStore)
     }
   }
 }

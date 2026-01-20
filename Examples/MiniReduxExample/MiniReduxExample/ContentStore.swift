@@ -15,7 +15,7 @@ class ContentStore: BaseStore<ContentStore.Action> {
   // MARK: - State
   var loading = false
   var quote = ""
-  var showTable = false
+  var tableStore: TableStore? = nil
   
   // MARK: - Action
   enum Action {
@@ -49,7 +49,7 @@ class ContentStore: BaseStore<ContentStore.Action> {
       return .none
 
     case .showTableTapped:
-      showTable = true
+      tableStore = TableStore()
       return .none
 
     }

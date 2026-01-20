@@ -2,6 +2,9 @@ import SwiftUI
 import UIKit
 
 struct TableView: UIViewRepresentable {
+  
+  let store: TableStore
+  
   func makeUIView(context: Context) -> UITableView {
     let tableView = UITableView()
     tableView.dataSource = context.coordinator
