@@ -73,6 +73,11 @@ The parent can maintain a list of child stores. To prevent unnecessary re-initia
 
 See example in [this unit test](Tests/MiniReduxTests/ObservableList.swift)
 
+## Working with UIKit
+
+Since the store is based on Swift's `@Observable` macro, it naturally works with UIKit. Starting with iOS 26, UIKit has built-in support for automatic observation tracking through the `updateProperties()` method, eliminating the need for manual observation setup.
+
+See example in [TableViewRepresentable.swift](Examples/MiniReduxExample/MiniReduxExample/TableViewRepresentable.swift)
 
 ## Apps using MiniRedux
 
