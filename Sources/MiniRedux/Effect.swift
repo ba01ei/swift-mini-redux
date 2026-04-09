@@ -11,11 +11,16 @@ public enum Effect<Action: Sendable> {
   case publisher(id: String? = nil, cancelInFlight: Bool = false, _ publisher: () -> any Publisher<Action, Never>)
   case cancel(id: String)
   case merge(id: String?, cancelInFlight: Bool = false, [Self])
-  
+  case concatenate(id: String?, cancelInFlight: Bool = false, [Self])
+
   @inlinable public static func merge(_ effects: Self...) -> Effect {
     return .merge(id: nil, effects)
   }
-  
+
+  @inlinable public static func concatenate(_ effects: Self...) -> Effect {
+    return .concatenate(id: nil, effects)
+  }
+
   @inlinable public static func run(_ operation: @escaping @Sendable ((Action) async -> Void) async -> Void) -> Effect {
     return .run(id: nil, operation)
   }
@@ -65,6 +70,23 @@ public enum Effect<Action: Sendable> {
         effectToUse.perform(cancellablesDict: &cancellablesDict, send: send)
       }
 
+    case .concatenate(let id, let cancelInFlight, let effects):
+      if let id, cancelInFlight {
+        Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
+      }
+      let operations: [@Sendable ((Action) async -> Void) async -> Void] = effects.compactMap {
+        if case .run(_, _, let run) = $0 { return run }
+        return nil
+      }
+      guard !operations.isEmpty else { break }
+      Task.detached {
+        for operation in operations {
+          await operation(send)
+        }
+      }
+      .toCancellable()
+      .store(id: id ?? "", in: &cancellablesDict)
+
     }
   }
   
@@ -82,6 +104,9 @@ public enum Effect<Action: Sendable> {
 
     case .merge(_, _, let effects):
       return .merge(id: id, cancelInFlight: cancelInFlight, effects)
+
+    case .concatenate(_, _, let effects):
+      return .concatenate(id: id, cancelInFlight: cancelInFlight, effects)
 
     }
   }
