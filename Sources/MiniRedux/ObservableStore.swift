@@ -44,24 +44,36 @@ import Observation
  }
  ```
  */
-@MainActor public protocol ObservableStore: AnyObject {
-  associatedtype Action: Sendable
-  func reduce(_ action: Action) -> Effect<Action>
-  var delegatedActionHandler: ((Action) -> Void)? { get }
-  var cancellables: [String: Set<AnyCancellable>] { get set }
-}
+@available(macOS 14.0, iOS 17.0, *)
+@MainActor @Observable open class BaseStore<Action: Sendable> {
+  public init(delegatedActionHandler: ((Action) -> Void)? = nil) {
+    self.delegatedActionHandler = delegatedActionHandler
+  }
 
-extension ObservableStore {
+  open func reduce(_ action: Action) -> Effect<Action> {
+    // to be implemented by subclass
+    fatalError("not implemented")
+  }
+
   /// Send an action to the store. The action will be processed by the reduce function.
   public func send(_ action: Action) {
     let result = reduce(action)
     result.perform(cancellablesDict: &cancellables, send: { [weak self] a in
       self?.send(a)
     })
-
     delegatedActionHandler?(action)
   }
-  
+
+  @ObservationIgnored public var delegatedActionHandler: ((Action) -> Void)?
+  @ObservationIgnored public var cancellables: [String : Set<AnyCancellable>] = [:]
+}
+
+@MainActor private protocol Reflectable {
+  var reflection: [String: String] { get }
+}
+
+@available(macOS 14.0, iOS 17.0, *)
+extension BaseStore: Reflectable {
   /// A key value representation of the state for unit testing and debugging.
   /// To track state change, at the end of the reducer, add something like:
   /// `print("\(self) received action: \(action). new state: \(reflection)")`
@@ -71,7 +83,7 @@ extension ObservableStore {
       guard let label = child.label else { return }
       if label.starts(with: "_") && !label.contains("$") {
         var valueStr: String
-        if let childStore = child.value as? any ObservableStore {
+        if let childStore = child.value as? Reflectable {
           let encoder = JSONEncoder()
           encoder.outputFormatting = [.sortedKeys]
           valueStr = String(data: (try? encoder.encode(childStore.reflection)) ?? Data(), encoding: .utf8) ?? "<encode failure>"
@@ -84,19 +96,4 @@ extension ObservableStore {
       }
     }
   }
-}
-
-@available(macOS 14.0, iOS 17.0, *)
-@Observable open class BaseStore<Action>: ObservableStore {
-  public init(delegatedActionHandler: ((Action) -> Void)? = nil) {
-    self.delegatedActionHandler = delegatedActionHandler
-  }
-
-  open func reduce(_ action: Action) -> Effect<Action> {
-    // to be implemented by subclass
-    fatalError("not implemented")
-  }
-
-  @ObservationIgnored public var delegatedActionHandler: ((Action) -> Void)?
-  @ObservationIgnored public var cancellables: [String : Set<AnyCancellable>] = [:]
 }
