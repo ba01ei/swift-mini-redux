@@ -7,11 +7,11 @@ import Foundation
 /// - We can use either `.run(id: "a") { ... }` or `.run { ... }.cancellable(id: "a")`. They are the same.
 public enum Effect<Action: Sendable> {
   case none
-  case run(id: String?, cancelInFlight: Bool = false, _ run: @Sendable ((Action) async -> Void) async -> Void)
-  case publisher(id: String? = nil, cancelInFlight: Bool = false, _ publisher: () -> any Publisher<Action, Never>)
-  case cancel(id: String)
-  case merge(id: String?, cancelInFlight: Bool = false, [Self])
-  case concatenate(id: String?, cancelInFlight: Bool = false, [Self])
+  case run(id: (any Hashable)?, cancelInFlight: Bool = false, _ run: @Sendable ((Action) async -> Void) async -> Void)
+  case publisher(id: (any Hashable)? = nil, cancelInFlight: Bool = false, _ publisher: () -> any Publisher<Action, Never>)
+  case cancel(id: any Hashable)
+  case merge(id: (any Hashable)? = nil, cancelInFlight: Bool = false, [Self])
+  case concatenate(id: (any Hashable)? = nil, cancelInFlight: Bool = false, [Self])
 
   @inlinable public static func merge(_ effects: Self...) -> Effect {
     return .merge(id: nil, effects)
@@ -26,15 +26,15 @@ public enum Effect<Action: Sendable> {
   }
 
   func perform(
-    cancellablesDict: inout [String: Set<AnyCancellable>], send: @escaping @MainActor (Action) async -> Void
+    cancellablesDict: inout [AnyHashable: Set<AnyCancellable>], send: @escaping @MainActor (Action) async -> Void
   ) {
     switch self {
     case .none:
       break
 
     case .cancel(let id):
-      cancellablesDict[id]?.forEach { $0.cancel() }
-      cancellablesDict.removeValue(forKey: id)
+      cancellablesDict[AnyHashable(id)]?.forEach { $0.cancel() }
+      cancellablesDict.removeValue(forKey: AnyHashable(id))
 
     case .run(let id, let cancelInFlight, let run):
       if let id, cancelInFlight {
@@ -44,7 +44,7 @@ public enum Effect<Action: Sendable> {
         await run(send)
       }
       .toCancellable()
-      .store(id: id ?? "", in: &cancellablesDict)
+      .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
 
     case .publisher(let id, let cancelInFlight, let publisher):
       if let id, cancelInFlight {
@@ -55,7 +55,7 @@ public enum Effect<Action: Sendable> {
           await send(action)
         }
       }
-      .store(id: id ?? "", in: &cancellablesDict)
+      .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
 
     case .merge(let id, let cancelInFlight, let effects):
       if let id, cancelInFlight {
@@ -85,13 +85,13 @@ public enum Effect<Action: Sendable> {
         }
       }
       .toCancellable()
-      .store(id: id ?? "", in: &cancellablesDict)
+      .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
 
     }
   }
   
   // override the id and cancelInFlight of an effect
-  public func cancellable(id: String, cancelInFlight: Bool = false) -> Self {
+  public func cancellable(id: some Hashable, cancelInFlight: Bool = false) -> Self {
     switch self {
     case .none, .cancel:
       return self
@@ -113,11 +113,12 @@ public enum Effect<Action: Sendable> {
 }
 
 extension AnyCancellable {
-  func store(id: String, in cancellablesDict: inout [String: Set<AnyCancellable>]) {
-    if cancellablesDict[id] == nil {
-      cancellablesDict[id] = Set()
+  func store(id: AnyHashable?, in cancellablesDict: inout [AnyHashable: Set<AnyCancellable>]) {
+    let key = id ?? AnyHashable("")
+    if cancellablesDict[key] == nil {
+      cancellablesDict[key] = Set()
     }
-    cancellablesDict[id]?.insert(self)
+    cancellablesDict[key]?.insert(self)
   }
 }
 

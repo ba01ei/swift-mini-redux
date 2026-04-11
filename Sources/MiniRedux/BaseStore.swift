@@ -72,6 +72,6 @@ import Observation
   }
 
   @ObservationIgnored public var delegatedActionHandler: ((Action) -> Void)?
-  @ObservationIgnored public var cancellables: [String : Set<AnyCancellable>] = [:]
+  @ObservationIgnored public var cancellables: [AnyHashable: Set<AnyCancellable>] = [:]
   @ObservationIgnored public var changeObservers: [ChangeObserver] = []
 }

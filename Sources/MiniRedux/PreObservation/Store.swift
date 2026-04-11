@@ -6,7 +6,7 @@ import SwiftUI
   @Published public var state: State
   nonisolated internal let initialState: State
   private let reducer: @MainActor (inout State, Action, @escaping @MainActor (Action) -> Void) -> Effect<Action>
-  private var cancellables = [String: Set<AnyCancellable>]()
+  private var cancellables = [AnyHashable: Set<AnyCancellable>]()
   private let debug: Bool
   public var delegatedActionHandler: (@MainActor (Action) -> Void)?
 
