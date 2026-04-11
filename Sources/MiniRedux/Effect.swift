@@ -12,6 +12,7 @@ public enum Effect<Action: Sendable> {
   case cancel(id: any Hashable)
   case merge(id: (any Hashable)? = nil, cancelInFlight: Bool = false, [Self])
   case concatenate(id: (any Hashable)? = nil, cancelInFlight: Bool = false, [Self])
+  case send(_ action: Action)
 
   @inlinable public static func merge(_ effects: Self...) -> Effect {
     return .merge(id: nil, effects)
@@ -25,8 +26,8 @@ public enum Effect<Action: Sendable> {
     return .run(id: nil, operation)
   }
 
-  func perform(
-    cancellablesDict: inout [AnyHashable: Set<AnyCancellable>], send: @escaping @MainActor (Action) async -> Void
+  @MainActor func perform(
+    cancellablesDict: inout [AnyHashable: Set<AnyCancellable>], send: @escaping @MainActor (Action) -> Void
   ) {
     switch self {
     case .none:
@@ -51,8 +52,8 @@ public enum Effect<Action: Sendable> {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
       }
       publisher().sink { action in
-        Task {
-          await send(action)
+        Task { @MainActor in
+          send(action)
         }
       }
       .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
@@ -87,13 +88,16 @@ public enum Effect<Action: Sendable> {
       .toCancellable()
       .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
 
+    case .send(let action):
+      send(action)
+
     }
   }
   
   // override the id and cancelInFlight of an effect
   public func cancellable(id: some Hashable, cancelInFlight: Bool = false) -> Self {
     switch self {
-    case .none, .cancel:
+    case .none, .cancel, .send:
       return self
 
     case .run(_, _, let run):
