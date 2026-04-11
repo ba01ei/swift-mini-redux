@@ -27,7 +27,7 @@ public enum Effect<Action: Sendable> {
   }
 
   @MainActor func perform(
-    cancellablesDict: inout [AnyHashable: Set<AnyCancellable>], send: @escaping @MainActor (Action) -> Void
+    cancellablesDict: inout [AnyHashable: Set<AnyCancellable>], send: @escaping @MainActor (Action) async -> Void
   ) {
     switch self {
     case .none:
@@ -52,8 +52,8 @@ public enum Effect<Action: Sendable> {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
       }
       publisher().sink { action in
-        Task { @MainActor in
-          send(action)
+        Task {
+          await send(action)
         }
       }
       .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
@@ -89,7 +89,9 @@ public enum Effect<Action: Sendable> {
       .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
 
     case .send(let action):
-      send(action)
+      Task {
+        await send(action)
+      }
 
     }
   }
