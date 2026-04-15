@@ -2,9 +2,9 @@ import Testing
 import Foundation
 import MiniRedux
 
-@Observable class OnChangeStore: BaseStore<OnChangeStore.Action> {
+@Observable class ChangeDetectionStore: BaseStore<ChangeDetectionStore.Action> {
   var count = 0
-  var count2 = 0
+  var count2: Int? = nil
   var update = ""
   var update2 = ""
 
@@ -14,7 +14,7 @@ import MiniRedux
       self?.update = "\(oldValue) -> \(newValue)"
     }
     onChangeOf(\.count2) { [weak self] oldValue, newValue in
-      self?.update2 = "\(oldValue) to \(newValue)"
+      self?.update2 = "\(oldValue, default: "nil") to \(newValue, default: "nil")"
     }
   }
 
@@ -28,31 +28,40 @@ import MiniRedux
     case .increment:
       count += 1
       return .none
-      
+
     case .increment2:
-      count2 += 1
+      count2 = (count2 ?? 0) + 1
       return .none
     }
   }
 }
 
-@MainActor @Test func onChangeOfSingleProperty() async throws {
-  let store = OnChangeStore()
-  store.send(.increment)
-  #expect(store.count == 1)
-  #expect(store.update == "0 -> 1")
+@Test func onChangeOfSingleProperty() async throws {
+  let store = await ChangeDetectionStore()
+  await store.send(.increment)
+  await expectWithDelay { await store.update == "0 -> 1" }
+  #expect(await store.count == 1)
 
-  store.send(.increment)
-  #expect(store.count == 2)
-  #expect(store.update == "1 -> 2")
+  await store.send(.increment)
+  await expectWithDelay { await store.update == "1 -> 2" }
+  #expect(await store.count == 2)
 }
 
-@MainActor @Test func onChangeOfMultipleProperties() async throws {
-  let store = OnChangeStore()
-  store.send(.increment)
-  store.send(.increment2)
-  #expect(store.count == 1)
-  #expect(store.count2 == 1)
-  #expect(store.update == "0 -> 1")
-  #expect(store.update2 == "0 to 1")
+@Test func onChangeOfMultipleProperties() async throws {
+  let store = await ChangeDetectionStore()
+  await store.send(.increment)
+  await expectWithDelay { await store.update == "0 -> 1" }
+  await store.send(.increment2)
+  await expectWithDelay { await store.update2 == "nil to 1" }
+  #expect(await store.count == 1)
+  #expect(await store.count2 == 1)
+}
+
+@Test func onChangeOfDirectMutation() async throws {
+  let store = await ChangeDetectionStore()
+  await MainActor.run { store.count = 5 }
+  await expectWithDelay { await store.update == "0 -> 5" }
+
+  await MainActor.run { store.count = 10 }
+  await expectWithDelay { await store.update == "5 -> 10" }
 }

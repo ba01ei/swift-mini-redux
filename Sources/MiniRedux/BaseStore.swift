@@ -60,11 +60,7 @@ import Observation
 
   /// Send an action to the store. The action will be processed by the reduce function.
   public func send(_ action: Action) {
-    let oldValues = changeObservers.map { $0.captureValue() }
     let result = reduce(action)
-    for (observer, oldValue) in zip(changeObservers, oldValues) {
-      observer.notify(oldValue)
-    }
     result.perform(cancellablesDict: &cancellables, send: { [weak self] a in
       self?.send(a)
     })
@@ -72,6 +68,12 @@ import Observation
   }
 
   @ObservationIgnored public var delegatedActionHandler: ((Action) -> Void)?
-  @ObservationIgnored public var cancellables: [AnyHashable: Set<AnyCancellable>] = [:]
-  @ObservationIgnored public var changeObservers: [ChangeObserver] = []
+  @ObservationIgnored var cancellables: [AnyHashable: Set<AnyCancellable>] = [:]
+  @ObservationIgnored public var onChangeContinuations: [AsyncStream<Void>.Continuation] = []
+
+  deinit {
+    for continuation in onChangeContinuations {
+      continuation.finish()
+    }
+  }
 }
