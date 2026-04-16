@@ -50,6 +50,20 @@ public extension ChangeObservable {
     }
   }
 
+  /// Variant of `onChangeOf` where the handler returns an `Effect`, like `reduce`.
+  func onChangeOf<V: Equatable & Sendable, A: Sendable>(
+    _ keyPath: KeyPath<Self, V>,
+    handler: @escaping @MainActor (_ oldValue: V, _ newValue: V) -> Effect<A>
+  ) where Self: BaseStore<A> {
+    onChangeOf(keyPath) { [weak self] oldValue, newValue in
+      guard let self else { return }
+      let effect = handler(oldValue, newValue)
+      effect.perform(cancellablesDict: &self.cancellables, send: { [weak self] a in
+        self?.send(a)
+      })
+    }
+  }
+
   /// Re-register `withObservationTracking` so the next mutation yields into the stream.
   private func startObservation<V>(
     keyPath: KeyPath<Self, V>,

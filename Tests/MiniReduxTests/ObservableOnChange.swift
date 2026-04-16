@@ -36,6 +36,34 @@ import MiniRedux
   }
 }
 
+@Observable class OnChangeEffectStore: BaseStore<OnChangeEffectStore.Action> {
+  var count = 0
+  var doubled = 0
+
+  override init(delegatedActionHandler: ((Action) -> Void)? = nil) {
+    super.init(delegatedActionHandler: delegatedActionHandler)
+    onChangeOf(\.count) { oldValue, newValue -> Effect<Action> in
+      return .send(.updateDoubled(newValue * 2))
+    }
+  }
+
+  enum Action {
+    case increment
+    case updateDoubled(Int)
+  }
+
+  override func reduce(_ action: Action) -> Effect<Action> {
+    switch action {
+    case .increment:
+      count += 1
+      return .none
+    case .updateDoubled(let value):
+      doubled = value
+      return .none
+    }
+  }
+}
+
 @Test func onChangeOfSingleProperty() async throws {
   let store = await ChangeDetectionStore()
   await store.send(.increment)
@@ -64,4 +92,15 @@ import MiniRedux
 
   await MainActor.run { store.count = 10 }
   await expectWithDelay { await store.update == "5 -> 10" }
+}
+
+@Test func onChangeOfReturningEffect() async throws {
+  let store = await OnChangeEffectStore()
+  await store.send(.increment)
+  await expectWithDelay { await store.doubled == 2 }
+  #expect(await store.count == 1)
+
+  await store.send(.increment)
+  await expectWithDelay { await store.doubled == 4 }
+  #expect(await store.count == 2)
 }
