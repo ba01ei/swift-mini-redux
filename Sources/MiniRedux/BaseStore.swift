@@ -78,6 +78,17 @@ import Observation
     }
   }
 
+  /// Set up parent -> child action forwarding, when both parent and child are `BaseStore`
+  /// Assuming both parent and child are BaseStore, and parent has an action that is associated to the child's action.
+  /// With this, when that specific parent action is sent, the associated child action is also sent to the child.
+  /// Call this on the child store.
+  /// ```swift
+  /// // inside a parent store
+  /// self.childStore = ChildStore(...)
+  ///   .forwardParentAction(from: self, {
+  ///     if case .childActions(let childAction) = action { childAction } else { nil }
+  ///   })
+  /// ```
   public func forwardParentAction<ParentAction: Sendable>(from parentStore: BaseStore<ParentAction>, _ extractChildAction: @escaping (ParentAction) -> Action?) -> Self {
     parentStore.childActionForwardList.append { [weak self] parentAction in
       if let childAction = extractChildAction(parentAction) {
@@ -87,6 +98,24 @@ import Observation
     return self
   }
 
+  /// Set up child -> parent delegation.
+  /// Assuming both parent and child are BaseStore, and parent has an action that is associated to the child's action.
+  /// With this, when any child action is sent, the associated parent action is also triggered.
+  /// Call this on the child store:
+  /// ```swift
+  /// // inside a parent store
+  /// self.childStore = ChildStore(...)
+  ///   .delegateAction(to: self, {
+  ///     ParentAction.childAction($0)
+  ///   })
+  /// ```
+  /// If the parent is not a `BaseStore`, then directly set `delegatedActionHandler` with a custom closure.
+  /// ```swift
+  /// childStore = ...
+  /// childStore.delegateActionHandler = { [weak self] childAction in
+  ///   ... // any custom logic
+  /// }
+  /// ```
   public func delegateAction<ParentAction>(to parent: BaseStore<ParentAction>, _ buildParentAction: @escaping (Action) -> ParentAction) -> Self {
     delegatedActionHandler = { [weak parent] action in
       let parentAction = buildParentAction(action)
