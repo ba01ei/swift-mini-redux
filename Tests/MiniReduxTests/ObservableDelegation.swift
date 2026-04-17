@@ -14,9 +14,8 @@ import Combine
   
   var value = 0
 
-  init(value: Int = 0, delegatedActionHandler: ((Action) -> Void)?) {
+  init(value: Int = 0) {
     self.value = value
-    super.init(delegatedActionHandler: delegatedActionHandler)
   }
 
   enum Action: Sendable {
@@ -48,9 +47,13 @@ import Combine
       if let child {
         child.send(.valueUpdated(value))
       } else {
-        child = ChildStore(value: value) { [weak self] childAction in
-          self?.send(.childActions(childAction))
-        }
+        child = ChildStore(value: value)
+          .delegateAction(to: self, { childAction in
+            .childActions(childAction)
+          })
+          .forwardParentAction(from: self, { action in
+            if case .childActions(let childAction) = action { childAction } else { nil }
+          })
       }
       return .none
       
@@ -75,21 +78,31 @@ import Combine
   #expect(parentStore.child == nil)
   
   parentStore.send(.showChild(1))
-  #expect(parentStore.child?.reflection == ChildStore(value: 1, delegatedActionHandler: nil).reflection)
+  #expect(parentStore.child?.reflection == ChildStore(value: 1).reflection)
   
+  // Sending a child action to child should update both child and parent (delegate)
   parentStore.child?.send(.valueUpdated(100))
   #expect(parentStore.reflection == {
     let parentStore = ParentStore()
     parentStore.value = 100
-    parentStore.child = ChildStore(value: 100, delegatedActionHandler: nil)
+    parentStore.child = ChildStore(value: 100)
     
+    return parentStore
+  }().reflection)
+
+  // Sending a child action to parent should update both parent and child (forward)
+  parentStore.send(.childActions(.valueUpdated(123)))
+  #expect(parentStore.reflection == {
+    let parentStore = ParentStore()
+    parentStore.value = 123
+    parentStore.child = ChildStore(value: 123)
     return parentStore
   }().reflection)
   
   parentStore.send(.hideChild)
   #expect(parentStore.reflection == {
     let parentStore = ParentStore()
-    parentStore.value = 100
+    parentStore.value = 123
     parentStore.child = nil
     return parentStore
   }().reflection)

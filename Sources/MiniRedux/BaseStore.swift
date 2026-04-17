@@ -60,15 +60,45 @@ import Observation
 
   /// Send an action to the store. The action will be processed by the reduce function.
   public func send(_ action: Action) {
+    sendAndForward(action)
+    delegatedActionHandler?(action)
+  }
+
+  internal func sendWithoutDelegatingOrForwarding(_ action: Action) {
     let result = reduce(action)
     result.perform(cancellablesDict: &cancellables, send: { [weak self] a in
       self?.send(a)
     })
-    delegatedActionHandler?(action)
+  }
+
+  internal func sendAndForward(_ action: Action) {
+    sendWithoutDelegatingOrForwarding(action)
+    for childActionForward in childActionForwardList {
+      childActionForward(action)
+    }
+  }
+
+  public func forwardParentAction<ParentAction: Sendable>(from parentStore: BaseStore<ParentAction>, _ extractChildAction: @escaping (ParentAction) -> Action?) -> Self {
+    parentStore.childActionForwardList.append { [weak self] parentAction in
+      if let childAction = extractChildAction(parentAction) {
+        self?.sendAndForward(childAction) // just don't delegate back, otherwise we get double call
+      }
+    }
+    return self
+  }
+
+  public func delegateAction<ParentAction>(to parent: BaseStore<ParentAction>, _ buildParentAction: @escaping (Action) -> ParentAction) -> Self {
+    delegatedActionHandler = { [weak parent] action in
+      let parentAction = buildParentAction(action)
+      parent?.sendWithoutDelegatingOrForwarding(parentAction)
+      parent?.delegatedActionHandler?(parentAction)
+    }
+    return self
   }
 
   @ObservationIgnored public var delegatedActionHandler: ((Action) -> Void)?
   @ObservationIgnored var cancellables: [AnyHashable: Set<AnyCancellable>] = [:]
+  @ObservationIgnored var childActionForwardList: [(Action) -> Void] = []
   @ObservationIgnored public var onChangeContinuations: [AsyncStream<Void>.Continuation] = []
 
   deinit {
