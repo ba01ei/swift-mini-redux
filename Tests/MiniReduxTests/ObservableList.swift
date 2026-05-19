@@ -18,7 +18,7 @@ import Combine
   // MARK: Action
   enum Action {
     case itemsFetched([(id: String, text: String?)])
-    case itemAction(id: String, ItemStore.Action)
+    case items(id: String, ItemStore.Action)
   }
   
   override func reduce(_ action: Action) -> Effect<Action> {
@@ -26,22 +26,28 @@ import Combine
       
     case .itemsFetched(let fetchedItems):
       items.updateInPlace(newItems: fetchedItems, newItemId: \.id) { _, item in
-        return ItemStore(id: item.id, text: item.text) { [weak self] childAction in
-          self?.send(.itemAction(id: item.id, childAction))
-        }
+        return ItemStore(id: item.id, text: item.text)
+          .delegateAction(to: self) { childAction in
+              .items(id: item.id, childAction)
+          }
+          .forwardParentAction(from: self) { action in
+            switch action {
+            case let .items(id: id, action):
+              return id == item.id ? action : nil
+            default:
+              return nil
+            }
+          }
       }
       return .none
       
-    case .itemAction(id: let id, let action):
-      switch action {
-      case .tapped:
-        lastTapped = id
-        return .none
-        
-      default:
-        return .none
-        
-      }
+    case let .items(id, .tapped):
+      lastTapped = id
+      return .none
+      
+    case .items:
+      return .none
+
     }
   }
 }
@@ -49,10 +55,10 @@ import Combine
 @Observable class ItemStore: BaseStore<ItemStore.Action>, Identifiable {
   let id: String
   var text: String? = nil
-  init(id: String, text: String? = nil, delegatedActionHandler: ((Action) -> Void)? = nil) {
+  init(id: String, text: String? = nil) {
     self.id = id
     self.text = text
-    super.init(delegatedActionHandler: delegatedActionHandler)
+    super.init()
     send(.initialized)
   }
   
