@@ -30,7 +30,7 @@ import Combine
 }
 
 @Test func simpleObservableStore() async throws {
-  let store = await CounterStore()
+  let store = await CounterStore()._printChangesOnAction()
   await store.send(.incrementTapped)
   #expect(await store.count == 1)
   

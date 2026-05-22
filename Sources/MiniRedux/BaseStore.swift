@@ -60,8 +60,15 @@ import Observation
 
   /// Send an action to the store. The action will be processed by the reduce function.
   public func send(_ action: Action) {
+    let stateBefore = debug ? reflection : nil
     sendAndForward(action)
     delegatedActionHandler?(action)
+    if let stateBefore {
+      let stateDiff = diff(stateBefore)
+      if !stateDiff.isEmpty {
+        print("\(self) received action: \(action). diff: \(stateDiff)")
+      }
+    }
   }
 
   internal func sendWithoutDelegatingOrForwarding(_ action: Action) {
@@ -129,6 +136,7 @@ import Observation
   @ObservationIgnored var cancellables: [AnyHashable: Set<AnyCancellable>] = [:]
   @ObservationIgnored var childActionForwardList: [(Action) -> Void] = []
   @ObservationIgnored public var onChangeContinuations: [AsyncStream<Void>.Continuation] = []
+  var debug = false
 
   deinit {
     for continuation in onChangeContinuations {

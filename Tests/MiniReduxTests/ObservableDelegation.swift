@@ -74,7 +74,7 @@ import Combine
 
 @Test @MainActor func obervableDelegation() async throws {
   
-  let parentStore = ParentStore()
+  let parentStore = ParentStore()._printChangesOnAction()
   #expect(parentStore.child == nil)
   
   parentStore.send(.showChild(1))
