@@ -27,7 +27,7 @@ public enum Effect<Action: Sendable> {
   }
 
   @MainActor func perform(
-    cancellablesDict: inout [AnyHashable: Set<AnyCancellable>], send: @escaping @MainActor (Action) async -> Void
+    cancellablesDict: inout [AnyHashable: Set<AnyCancellable>], send: @escaping @MainActor @Sendable (Action) -> Void
   ) {
     switch self {
     case .none:
@@ -53,12 +53,15 @@ public enum Effect<Action: Sendable> {
       if let id, cancelInFlight {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
       }
-      publisher().sink { action in
-        Task {
-          await send(action)
+      publisher()
+        .eraseToAnyPublisher()
+        .receive(on: DispatchQueue.main)
+        .sink { action in
+          MainActor.assumeIsolated {
+            send(action)
+          }
         }
-      }
-      .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
+        .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
 
     case .merge(let id, let cancelInFlight, let effects):
       if let id, cancelInFlight {
@@ -93,18 +96,18 @@ public enum Effect<Action: Sendable> {
       .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
 
     case .send(let action):
-      Task {
-        await send(action)
+      Task { @MainActor in
+        send(action)
       }
 
     }
   }
-  
+
   @MainActor private static func sendUnlessCancelled(
-    _ action: Action, send: @MainActor (Action) async -> Void
-  ) async {
+    _ action: Action, send: @MainActor (Action) -> Void
+  ) {
     guard !Task.isCancelled else { return }
-    await send(action)
+    send(action)
   }
 
   // override the id and cancelInFlight of an effect
