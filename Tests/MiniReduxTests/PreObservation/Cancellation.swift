@@ -1,3 +1,4 @@
+@preconcurrency import Combine
 import Foundation
 import MiniRedux
 import Testing
@@ -106,6 +107,76 @@ import Testing
 
   try? await Task.sleep(nanoseconds: 100_000_000)
   #expect(store.state.received == false)
+}
+
+@Test @MainActor func cancelledPublisherDropsInFlightAction() async throws {
+  struct Feature: Reducer {
+    struct State: Equatable {
+      var received = false
+    }
+    enum Action {
+      case start
+      case cancelSub
+      case emitted
+    }
+    @MainActor static func store(subject: PassthroughSubject<Void, Never>) -> StoreOf<Self> {
+      return Store(initialState: State()) { state, action, send in
+        switch action {
+        case .start:
+          return .publisher(id: "sub") { subject.map { Action.emitted } }
+        case .cancelSub:
+          return .cancel(id: "sub")
+        case .emitted:
+          state.received = true
+          return .none
+        }
+      }
+    }
+  }
+
+  let subject = PassthroughSubject<Void, Never>()
+  let store = Feature.store(subject: subject)
+  store.send(.start)
+
+  subject.send(())
+  store.send(.cancelSub)
+
+  try? await Task.sleep(nanoseconds: 100_000_000)
+  #expect(store.state.received == false)
+}
+
+@Test @MainActor func publisherDeliversFromBackgroundThread() async throws {
+  struct Feature: Reducer {
+    struct State: Equatable {
+      var received = false
+    }
+    enum Action {
+      case start
+      case emitted
+    }
+    @MainActor static func store(subject: PassthroughSubject<Action, Never>) -> StoreOf<Self> {
+      return Store(initialState: State()) { state, action, send in
+        switch action {
+        case .start:
+          return .publisher(id: "sub") { subject }
+        case .emitted:
+          state.received = true
+          return .none
+        }
+      }
+    }
+  }
+
+  let subject = PassthroughSubject<Feature.Action, Never>()
+  let store = Feature.store(subject: subject)
+  store.send(.start)
+  DispatchQueue.global().async {
+    subject.send(.emitted)
+  }
+  for _ in 0 ..< 20 where !store.state.received {
+    try? await Task.sleep(nanoseconds: 50_000_000)
+  }
+  #expect(store.state.received)
 }
 
 @Test @MainActor func liveEffectStillDeliversActions() async throws {
