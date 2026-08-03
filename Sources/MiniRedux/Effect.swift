@@ -42,7 +42,9 @@ public enum Effect<Action: Sendable> {
         Self.cancel(id: id).perform(cancellablesDict: &cancellablesDict, send: send)
       }
       Task.detached {
-        await run(send)
+        await run { action in
+          await Self.sendUnlessCancelled(action, send: send)
+        }
       }
       .toCancellable()
       .store(id: id.map { AnyHashable($0) }, in: &cancellablesDict)
@@ -96,6 +98,13 @@ public enum Effect<Action: Sendable> {
     }
   }
   
+  @MainActor private static func sendUnlessCancelled(
+    _ action: Action, send: @MainActor (Action) async -> Void
+  ) async {
+    guard !Task.isCancelled else { return }
+    await send(action)
+  }
+
   // override the id and cancelInFlight of an effect
   public func cancellable(id: some Hashable, cancelInFlight: Bool = false) -> Self {
     switch self {
