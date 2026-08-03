@@ -84,7 +84,9 @@ public enum Effect<Action: Sendable> {
       guard !operations.isEmpty else { break }
       Task.detached {
         for operation in operations {
-          await operation(send)
+          await operation { action in
+            await Self.sendUnlessCancelled(action, send: send)
+          }
         }
       }
       .toCancellable()
