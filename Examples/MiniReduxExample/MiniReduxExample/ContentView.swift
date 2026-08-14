@@ -26,7 +26,7 @@ struct ContentView: View {
     }
     .padding()
     .sheet(item: $store.tableStore) { tableStore in
-      TableView(store: tableStore)
+      HybridTableView(store: tableStore)
     }
   }
 }

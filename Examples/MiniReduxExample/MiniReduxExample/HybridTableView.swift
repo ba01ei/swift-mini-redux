@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 import MiniRedux
 
-struct TableView: View {
+struct HybridTableView: View {
   let store: TableStore
 
   var body: some View {
@@ -18,7 +18,7 @@ struct TableView: View {
         }
         .padding()
       }
-      TableViewRepresentable(store: store)
+      HybridTableViewRepresentable(store: store)
     }
   }
 }

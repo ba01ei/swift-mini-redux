@@ -6,3 +6,5 @@
 /*.xcodeproj
 xcuserdata/
 .docc-build/
+Examples/MiniReduxExample/.derived-data*
+Examples/MiniReduxExample/DerivedData

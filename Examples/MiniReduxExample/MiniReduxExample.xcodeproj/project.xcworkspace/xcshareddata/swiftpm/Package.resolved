@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ba01ei/swift-mini-redux",
       "state" : {
-        "revision" : "ce7817f2df8e7deaed8cc481fc512b9e6e5b52eb",
-        "version" : "0.2.2"
+        "revision" : "442587c241ab97e66ffcd705f5825686aee7ab60",
+        "version" : "0.2.13"
       }
     }
   ],

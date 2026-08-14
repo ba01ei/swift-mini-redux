@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TableViewRepresentable: UIViewRepresentable {
+struct HybridTableViewRepresentable: UIViewRepresentable {
 
   let store: TableStore
   
