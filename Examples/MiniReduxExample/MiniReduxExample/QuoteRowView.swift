@@ -2,6 +2,8 @@ import UIKit
 
 final class QuoteRowView: UITableViewCell {
   static let reuseIdentifier = "QuoteTableViewCell"
+  
+  private var store: QuoteRowStore?
 
   let quoteLabel = UILabel()
 
@@ -21,5 +23,24 @@ final class QuoteRowView: UITableViewCell {
 
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+
+  func configure(with store: QuoteRowStore) {
+    if let currentStore = self.store, currentStore === store {
+      return
+    }
+    self.store = store
+    setNeedsUpdateConfiguration()
+  }
+
+  override func updateConfiguration(using state: UICellConfigurationState) {
+    super.updateConfiguration(using: state)
+    quoteLabel.text = store?.text
+  }
+
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    store = nil
+    quoteLabel.text = nil
   }
 }

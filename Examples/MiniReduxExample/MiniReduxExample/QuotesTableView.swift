@@ -43,10 +43,7 @@ final class QuotesTableView: UITableView {
         return UITableViewCell()
       }
 
-      cell.configurationUpdateHandler = { cell, _ in
-        guard let cell = cell as? QuoteRowView else { return }
-        cell.quoteLabel.text = rowStore.text
-      }
+      cell.configure(with: rowStore)
       return cell
     }
   }
