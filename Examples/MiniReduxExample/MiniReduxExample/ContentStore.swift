@@ -16,12 +16,14 @@ class ContentStore: BaseStore<ContentStore.Action> {
   var loading = false
   var quote = ""
   var tableStore: TableStore? = nil
+  var uiKitTableStore: TableStore? = nil
   
   // MARK: - Action
   enum Action {
     case fetchQuoteTapped
     case quoteFetched(String)
     case showTableTapped
+    case showUIKitTableTapped
     
     // child action
     case table(TableStore.Action)
@@ -53,6 +55,12 @@ class ContentStore: BaseStore<ContentStore.Action> {
 
     case .showTableTapped:
       tableStore = TableStore() { [weak self] tableAction in
+        self?.send(.table(tableAction))
+      }
+      return .none
+
+    case .showUIKitTableTapped:
+      uiKitTableStore = TableStore() { [weak self] tableAction in
         self?.send(.table(tableAction))
       }
       return .none

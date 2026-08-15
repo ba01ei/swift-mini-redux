@@ -14,7 +14,7 @@ class TableStore: BaseStore<TableStore.Action>, Identifiable {
   
   // MARK: - State
   let id = UUID()
-  var content: [String] = []
+  var rows: [QuoteRowStore] = []
   var isLoading = false
   
   // MARK: - Action
@@ -44,7 +44,7 @@ class TableStore: BaseStore<TableStore.Action>, Identifiable {
 
     case .quoteFetched(let quote):
       isLoading = false
-      content.append(quote)
+      rows.append(QuoteRowStore(text: quote))
       return .none
     }
   }

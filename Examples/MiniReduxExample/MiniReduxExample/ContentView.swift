@@ -23,10 +23,16 @@ struct ContentView: View {
       Button("Show a table") {
         store.send(.showTableTapped)
       }
+      Button("Show a UIKit table") {
+        store.send(.showUIKitTableTapped)
+      }
     }
     .padding()
     .sheet(item: $store.tableStore) { tableStore in
       HybridTableView(store: tableStore)
+    }
+    .sheet(item: $store.uiKitTableStore) { tableStore in
+      UIKitTableViewRepresentable(store: tableStore)
     }
   }
 }
