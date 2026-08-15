@@ -15,6 +15,7 @@ class TableStore: BaseStore<TableStore.Action>, Identifiable {
   // MARK: - State
   let id = UUID()
   var rows: [QuoteRowStore] = []
+  @ObservationIgnored var rowsByID: [UUID: QuoteRowStore] = [:]
   var isLoading = false
   
   // MARK: - Action
@@ -44,7 +45,9 @@ class TableStore: BaseStore<TableStore.Action>, Identifiable {
 
     case .quoteFetched(let quote):
       isLoading = false
-      rows.append(QuoteRowStore(text: quote))
+      let rowStore = QuoteRowStore(text: quote)
+      rows.append(rowStore)
+      rowsByID[rowStore.id] = rowStore
       return .none
     }
   }

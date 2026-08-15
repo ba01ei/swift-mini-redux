@@ -25,23 +25,16 @@ final class QuotesTableView: UITableView {
 
   override func updateProperties() {
     super.updateProperties()
-
-    let rows = store.rows
-    rowsByID = rows.reduce(into: [UUID: QuoteRowStore]()) { partialResult, nextRowStore in
-      partialResult[nextRowStore.id] = nextRowStore
-    }
-
     var snapshot = NSDiffableDataSourceSnapshot<Section, QuoteRowStore.ID>()
     snapshot.appendSections([.main])
-    snapshot.appendItems(rows.map(\.id))
+    snapshot.appendItems(store.rows.map(\.id))
     diffableDataSource.apply(snapshot, animatingDifferences: window != nil)
   }
 
   private func makeDiffableDataSource() -> UITableViewDiffableDataSource<Section, QuoteRowStore.ID> {
-    UITableViewDiffableDataSource(tableView: self) { [weak self] tableView, indexPath, rowID in
+    UITableViewDiffableDataSource(tableView: self) { [store] tableView, indexPath, rowID in
       guard
-        let self,
-        let rowStore = rowsByID[rowID],
+        let rowStore = store.rowsByID[rowID],
         let cell = tableView.dequeueReusableCell(
           withIdentifier: QuoteTableViewCell.reuseIdentifier,
           for: indexPath
