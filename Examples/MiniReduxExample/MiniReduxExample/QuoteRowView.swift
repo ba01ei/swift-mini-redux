@@ -1,3 +1,4 @@
+import MiniRedux
 import UIKit
 
 final class QuoteRowView: UITableViewCell {
@@ -5,7 +6,8 @@ final class QuoteRowView: UITableViewCell {
   
   private var store: QuoteRowStore?
 
-  let quoteLabel = UILabel()
+  private let quoteLabel = UILabel()
+  private let favoriteImageView = UIImageView()
 
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -13,6 +15,16 @@ final class QuoteRowView: UITableViewCell {
     quoteLabel.lineBreakMode = .byWordWrapping
     quoteLabel.translatesAutoresizingMaskIntoConstraints = false
     contentView.addSubview(quoteLabel)
+    favoriteImageView.contentMode = .scaleAspectFit
+    favoriteImageView.tintColor = .systemYellow
+    favoriteImageView.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
+    accessoryView = favoriteImageView
+    selectionStyle = .none
+    addGestureRecognizer(UITapGestureRecognizer(
+      target: self,
+      action: #selector(handleTap)
+    ))
+    accessibilityHint = "Toggles favorite"
     NSLayoutConstraint.activate([
       quoteLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
       quoteLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
@@ -36,11 +48,25 @@ final class QuoteRowView: UITableViewCell {
   override func updateConfiguration(using state: UICellConfigurationState) {
     super.updateConfiguration(using: state)
     quoteLabel.text = store?.text
+    let isFavorited = store?.isFavorited == true
+    favoriteImageView.image = UIImage(systemName: isFavorited ? "star.fill" : "star")
+    accessibilityValue = isFavorited ? "Favorited" : "Not favorited"
+  }
+
+  @objc private func handleTap() {
+    store?.send(.cellTapped)
+  }
+
+  override func accessibilityActivate() -> Bool {
+    store?.send(.cellTapped)
+    return true
   }
 
   override func prepareForReuse() {
     super.prepareForReuse()
     store = nil
     quoteLabel.text = nil
+    accessibilityValue = nil
+    setNeedsUpdateConfiguration()
   }
 }
