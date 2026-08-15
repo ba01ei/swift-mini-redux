@@ -10,7 +10,7 @@ import Observation
 import Foundation
 
 @Observable
-class TableStore: BaseStore<TableStore.Action>, Identifiable {
+class QuotesTableStore: BaseStore<QuotesTableStore.Action>, Identifiable {
   
   // MARK: - State
   let id = UUID()

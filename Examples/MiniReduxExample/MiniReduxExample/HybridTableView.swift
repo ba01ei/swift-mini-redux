@@ -3,7 +3,7 @@ import UIKit
 import MiniRedux
 
 struct HybridTableView: View {
-  let store: TableStore
+  let store: QuotesTableStore
 
   var body: some View {
     VStack {

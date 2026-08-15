@@ -2,13 +2,13 @@ import MiniRedux
 import UIKit
 
 final class UIKitTableView: UIView {
-  let store: TableStore
+  let store: QuotesTableStore
 
   private let activityIndicator = UIActivityIndicatorView(style: .medium)
   private let addButton = UIButton(type: .system)
   private let tableView: QuotesTableView
 
-  init(store: TableStore) {
+  init(store: QuotesTableStore) {
     self.store = store
     self.tableView = QuotesTableView(store: store)
     super.init(frame: .zero)

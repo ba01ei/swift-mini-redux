@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HybridTableViewRepresentable: UIViewRepresentable {
-  let store: TableStore
+  let store: QuotesTableStore
 
   func makeUIView(context: Context) -> QuotesTableView {
     QuotesTableView(store: store)

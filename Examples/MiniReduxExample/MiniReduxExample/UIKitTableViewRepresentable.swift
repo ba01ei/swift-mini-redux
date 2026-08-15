@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct UIKitTableViewRepresentable: UIViewRepresentable {
-  let store: TableStore
+  let store: QuotesTableStore
 
   func makeUIView(context: Context) -> UIKitTableView {
     UIKitTableView(store: store)

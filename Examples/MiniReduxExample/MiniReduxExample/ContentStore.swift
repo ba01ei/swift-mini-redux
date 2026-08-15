@@ -15,8 +15,8 @@ class ContentStore: BaseStore<ContentStore.Action> {
   // MARK: - State
   var loading = false
   var quote = ""
-  var tableStore: TableStore? = nil
-  var uiKitTableStore: TableStore? = nil
+  var tableStore: QuotesTableStore? = nil
+  var uiKitTableStore: QuotesTableStore? = nil
   
   // MARK: - Action
   enum Action {
@@ -26,7 +26,7 @@ class ContentStore: BaseStore<ContentStore.Action> {
     case showUIKitTableTapped
     
     // child action
-    case table(TableStore.Action)
+    case table(QuotesTableStore.Action)
   }
   
   // MARK: - Reducer
@@ -54,15 +54,15 @@ class ContentStore: BaseStore<ContentStore.Action> {
       return .none
 
     case .showTableTapped:
-      tableStore = TableStore() { [weak self] tableAction in
-        self?.send(.table(tableAction))
-      }
+      tableStore = QuotesTableStore().delegateAction(to: self, { tableAction in
+          .table(tableAction)
+      })
       return .none
 
     case .showUIKitTableTapped:
-      uiKitTableStore = TableStore() { [weak self] tableAction in
-        self?.send(.table(tableAction))
-      }
+      uiKitTableStore = QuotesTableStore().delegateAction(to: self, { tableAction in
+        .table(tableAction)
+      })
       return .none
 
     case .table(let tableAction):

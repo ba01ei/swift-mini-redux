@@ -1,6 +1,6 @@
 import UIKit
 
-final class QuoteTableViewCell: UITableViewCell {
+final class QuoteRowView: UITableViewCell {
   static let reuseIdentifier = "QuoteTableViewCell"
 
   let quoteLabel = UILabel()
