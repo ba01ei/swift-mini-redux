@@ -21,7 +21,7 @@ struct ContentView: View {
       Button("Fetch Random Quote") {
         store.send(.fetchQuoteTapped)
       }
-      Button("Show a table") {
+      Button("Show a SwiftUI list") {
         store.send(.showTableTapped)
       }
       Button("Show a UIKit table") {
