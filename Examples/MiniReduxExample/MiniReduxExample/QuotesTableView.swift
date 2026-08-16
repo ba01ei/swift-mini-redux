@@ -5,11 +5,11 @@ final class QuotesTableView: UITableView {
     case main
   }
 
-  let store: QuotesTableStore
+  let store: QuotesStore
 
   private lazy var diffableDataSource = makeDiffableDataSource()
 
-  init(store: QuotesTableStore) {
+  init(store: QuotesStore) {
     self.store = store
     super.init(frame: .zero, style: .plain)
     register(QuoteRowViewUIKit.self, forCellReuseIdentifier: QuoteRowViewUIKit.reuseIdentifier)

@@ -2,8 +2,8 @@ import SwiftUI
 import UIKit
 import MiniRedux
 
-struct QuotesTableViewSwiftUI: View {
-  let store: QuotesTableStore
+struct QuotesViewSwiftUI: View {
+  let store: QuotesStore
 
   var body: some View {
     VStack {

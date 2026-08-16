@@ -30,10 +30,10 @@ struct ContentView: View {
     }
     .padding()
     .sheet(isPresented: $store.swiftUITablePresented) {
-      QuotesTableViewSwiftUI(store: store.tableStore)
+      QuotesViewSwiftUI(store: store.tableStore)
     }
     .sheet(isPresented: $store.uiKitTablePresented) {
-      QuotesTableViewRepresentable(store: store.tableStore)
+      QuotesViewRepresentable(store: store.tableStore)
     }
   }
 }

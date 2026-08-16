@@ -17,7 +17,7 @@ class ContentStore: BaseStore<ContentStore.Action> {
   var quote = ""
   var swiftUITablePresented = false
   var uiKitTablePresented = false
-  @ObservationIgnored lazy var tableStore = QuotesTableStore().delegateAction(to: self, { tableAction in
+  @ObservationIgnored lazy var tableStore = QuotesStore().delegateAction(to: self, { tableAction in
       .table(tableAction)
   })
 
@@ -29,7 +29,7 @@ class ContentStore: BaseStore<ContentStore.Action> {
     case showUIKitTableTapped
     
     // child action
-    case table(QuotesTableStore.Action)
+    case table(QuotesStore.Action)
   }
   
   // MARK: - Reducer
