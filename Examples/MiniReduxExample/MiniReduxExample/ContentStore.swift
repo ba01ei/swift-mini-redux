@@ -64,11 +64,11 @@ class ContentStore: BaseStore<ContentStore.Action> {
       uiKitTablePresented = true
       return .none
 
-    case .table(let tableAction):
-      switch tableAction {
+    case .table(let quotesAction):
+      switch quotesAction {
       case .quoteFetched(let quote):
         self.quote = quote
-      default:
+      case .addTapped:
         break
       }
       return .none

@@ -1,30 +1,18 @@
-//
-//  Table.swift
-//  MiniReduxExample
-//
-//  Created by Bao Lei on 1/19/26.
-//
-
+import Foundation
 import MiniRedux
 import Observation
-import Foundation
 
 @Observable
-class QuotesStore: BaseStore<QuotesStore.Action>, Identifiable {
-  
-  // MARK: - State
+final class QuotesStore: BaseStore<QuotesStore.Action>, Identifiable {
   let id = UUID()
-  var rows: [QuoteRowStore] = []
-  @ObservationIgnored var rowsByID: [UUID: QuoteRowStore] = [:]
   var isLoading = false
-  
-  // MARK: - Action
+  var tableStore = QuotesTableStore()
+
   enum Action {
     case addTapped
     case quoteFetched(String)
   }
 
-  // MARK: - Reducer
   override func reduce(_ action: Action) -> Effect<Action> {
     switch action {
     case .addTapped:
@@ -45,9 +33,7 @@ class QuotesStore: BaseStore<QuotesStore.Action>, Identifiable {
 
     case .quoteFetched(let quote):
       isLoading = false
-      let rowStore = QuoteRowStore(text: quote)
-      rows.append(rowStore)
-      rowsByID[rowStore.id] = rowStore
+      tableStore.send(.quoteAdded(quote))
       return .none
     }
   }

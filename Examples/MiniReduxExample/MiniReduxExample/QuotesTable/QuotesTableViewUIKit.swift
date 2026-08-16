@@ -1,15 +1,15 @@
 import UIKit
 
-final class QuotesTableView: UITableView {
+final class QuotesTableViewUIKit: UITableView {
   private nonisolated enum Section: Hashable, Sendable {
     case main
   }
 
-  let store: QuotesStore
+  let store: QuotesTableStore
 
   private lazy var diffableDataSource = makeDiffableDataSource()
 
-  init(store: QuotesStore) {
+  init(store: QuotesTableStore) {
     self.store = store
     super.init(frame: .zero, style: .plain)
     register(QuoteRowViewUIKit.self, forCellReuseIdentifier: QuoteRowViewUIKit.reuseIdentifier)

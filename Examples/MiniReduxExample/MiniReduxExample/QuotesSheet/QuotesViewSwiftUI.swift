@@ -1,6 +1,5 @@
-import SwiftUI
-import UIKit
 import MiniRedux
+import SwiftUI
 
 struct QuotesViewSwiftUI: View {
   let store: QuotesStore
@@ -18,7 +17,7 @@ struct QuotesViewSwiftUI: View {
         }
         .padding()
       }
-      List(store.rows) { rowStore in
+      List(store.tableStore.rows) { rowStore in
         QuoteRowViewSwiftUI(store: rowStore)
       }
       .listStyle(.plain)

@@ -6,11 +6,11 @@ final class QuotesViewUIKit: UIView {
 
   private let activityIndicator = UIActivityIndicatorView(style: .medium)
   private let addButton = UIButton(type: .system)
-  private let tableView: QuotesTableView
+  private let tableView: QuotesTableViewUIKit
 
   init(store: QuotesStore) {
     self.store = store
-    self.tableView = QuotesTableView(store: store)
+    self.tableView = QuotesTableViewUIKit(store: store.tableStore)
     super.init(frame: .zero)
     setup()
   }
