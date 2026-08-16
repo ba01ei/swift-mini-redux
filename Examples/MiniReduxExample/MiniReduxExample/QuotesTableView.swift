@@ -22,11 +22,26 @@ final class QuotesTableView: UITableView {
     fatalError("init(coder:) has not been implemented")
   }
 
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    if #unavailable(iOS 26.0) {
+      applyRowsSnapshotIfNeeded()
+    }
+  }
+
+  @available(iOS 26.0, *)
   override func updateProperties() {
     super.updateProperties()
+    applyRowsSnapshotIfNeeded()
+  }
+
+  private func applyRowsSnapshotIfNeeded() {
+    let rowIDs = store.rows.map(\.id)
+    guard rowIDs != diffableDataSource.snapshot().itemIdentifiers else { return }
+
     var snapshot = NSDiffableDataSourceSnapshot<Section, QuoteRowStore.ID>()
     snapshot.appendSections([.main])
-    snapshot.appendItems(store.rows.map(\.id))
+    snapshot.appendItems(rowIDs)
     diffableDataSource.apply(snapshot, animatingDifferences: window != nil)
   }
 

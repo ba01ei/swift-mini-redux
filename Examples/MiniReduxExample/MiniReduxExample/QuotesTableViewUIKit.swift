@@ -19,8 +19,20 @@ final class QuotesTableViewUIKit: UIView {
     fatalError("init(coder:) has not been implemented")
   }
 
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    if #unavailable(iOS 26.0) {
+      updateFromState()
+    }
+  }
+
+  @available(iOS 26.0, *)
   override func updateProperties() {
     super.updateProperties()
+    updateFromState()
+  }
+
+  private func updateFromState() {
     if store.isLoading {
       activityIndicator.startAnimating()
     } else {
