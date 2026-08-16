@@ -1,7 +1,7 @@
 import MiniRedux
 import UIKit
 
-final class QuoteRowView: UITableViewCell {
+final class QuoteRowViewUIKit: UITableViewCell {
   static let reuseIdentifier = "QuoteTableViewCell"
   
   private var store: QuoteRowStore?
@@ -16,7 +16,6 @@ final class QuoteRowView: UITableViewCell {
     quoteLabel.translatesAutoresizingMaskIntoConstraints = false
     contentView.addSubview(quoteLabel)
     favoriteImageView.contentMode = .scaleAspectFit
-    favoriteImageView.tintColor = .systemYellow
     favoriteImageView.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
     accessoryView = favoriteImageView
     selectionStyle = .none

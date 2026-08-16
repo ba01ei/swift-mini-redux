@@ -13,7 +13,7 @@ final class QuotesTableView: UITableView {
   init(store: QuotesTableStore) {
     self.store = store
     super.init(frame: .zero, style: .plain)
-    register(QuoteRowView.self, forCellReuseIdentifier: QuoteRowView.reuseIdentifier)
+    register(QuoteRowViewUIKit.self, forCellReuseIdentifier: QuoteRowViewUIKit.reuseIdentifier)
     rowHeight = UITableView.automaticDimension
     estimatedRowHeight = 44
     _ = diffableDataSource
@@ -36,9 +36,9 @@ final class QuotesTableView: UITableView {
       guard
         let rowStore = store.rowsByID[rowID],
         let cell = tableView.dequeueReusableCell(
-          withIdentifier: QuoteRowView.reuseIdentifier,
+          withIdentifier: QuoteRowViewUIKit.reuseIdentifier,
           for: indexPath
-        ) as? QuoteRowView
+        ) as? QuoteRowViewUIKit
       else {
         return UITableViewCell()
       }

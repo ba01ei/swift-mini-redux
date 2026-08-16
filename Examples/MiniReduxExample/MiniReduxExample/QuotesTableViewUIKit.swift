@@ -1,7 +1,7 @@
 import MiniRedux
 import UIKit
 
-final class UIKitTableView: UIView {
+final class QuotesTableViewUIKit: UIView {
   let store: QuotesTableStore
 
   private let activityIndicator = UIActivityIndicatorView(style: .medium)

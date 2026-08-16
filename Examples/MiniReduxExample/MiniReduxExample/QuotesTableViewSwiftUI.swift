@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 import MiniRedux
 
-struct HybridTableView: View {
+struct QuotesTableViewSwiftUI: View {
   let store: QuotesTableStore
 
   var body: some View {
@@ -18,7 +18,10 @@ struct HybridTableView: View {
         }
         .padding()
       }
-      HybridTableViewRepresentable(store: store)
+      List(store.rows) { rowStore in
+        QuoteRowViewSwiftUI(store: rowStore)
+      }
+      .listStyle(.plain)
     }
   }
 }

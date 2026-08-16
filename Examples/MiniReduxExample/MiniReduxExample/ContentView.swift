@@ -29,10 +29,10 @@ struct ContentView: View {
     }
     .padding()
     .sheet(item: $store.tableStore) { tableStore in
-      HybridTableView(store: tableStore)
+      QuotesTableViewSwiftUI(store: tableStore)
     }
     .sheet(item: $store.uiKitTableStore) { tableStore in
-      UIKitTableViewRepresentable(store: tableStore)
+      QuotesTableViewRepresentable(store: tableStore)
     }
   }
 }
