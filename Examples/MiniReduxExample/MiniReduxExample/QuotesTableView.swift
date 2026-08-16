@@ -7,7 +7,6 @@ final class QuotesTableView: UITableView {
 
   let store: QuotesTableStore
 
-  private var rowsByID: [QuoteRowStore.ID: QuoteRowStore] = [:]
   private lazy var diffableDataSource = makeDiffableDataSource()
 
   init(store: QuotesTableStore) {

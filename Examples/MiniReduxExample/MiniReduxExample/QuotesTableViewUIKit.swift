@@ -34,8 +34,8 @@ final class QuotesTableViewUIKit: UIView {
     activityIndicator.hidesWhenStopped = true
 
     addButton.setTitle("Add a quote", for: .normal)
-    addButton.addAction(UIAction { [weak self] _ in
-      self?.store.send(.addTapped)
+    addButton.addAction(UIAction { [store] _ in
+      store.send(.addTapped)
     }, for: .touchUpInside)
 
     let spacer = UIView()
