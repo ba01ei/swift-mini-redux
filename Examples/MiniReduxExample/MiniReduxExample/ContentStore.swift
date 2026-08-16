@@ -15,9 +15,12 @@ class ContentStore: BaseStore<ContentStore.Action> {
   // MARK: - State
   var loading = false
   var quote = ""
-  var tableStore: QuotesTableStore? = nil
-  var uiKitTableStore: QuotesTableStore? = nil
-  
+  var swiftUITablePresented = false
+  var uiKitTablePresented = false
+  @ObservationIgnored lazy var tableStore = QuotesTableStore().delegateAction(to: self, { tableAction in
+      .table(tableAction)
+  })
+
   // MARK: - Action
   enum Action {
     case fetchQuoteTapped
@@ -54,15 +57,11 @@ class ContentStore: BaseStore<ContentStore.Action> {
       return .none
 
     case .showTableTapped:
-      tableStore = QuotesTableStore().delegateAction(to: self, { tableAction in
-          .table(tableAction)
-      })
+      swiftUITablePresented = true
       return .none
 
     case .showUIKitTableTapped:
-      uiKitTableStore = QuotesTableStore().delegateAction(to: self, { tableAction in
-        .table(tableAction)
-      })
+      uiKitTablePresented = true
       return .none
 
     case .table(let tableAction):

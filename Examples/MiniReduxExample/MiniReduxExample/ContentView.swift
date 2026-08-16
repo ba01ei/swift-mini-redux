@@ -10,6 +10,7 @@ import MiniRedux
 
 struct ContentView: View {
   @State var store = ContentStore()
+
   var body: some View {
     VStack(spacing: 20) {
       if store.loading {
@@ -28,11 +29,11 @@ struct ContentView: View {
       }
     }
     .padding()
-    .sheet(item: $store.tableStore) { tableStore in
-      QuotesTableViewSwiftUI(store: tableStore)
+    .sheet(isPresented: $store.swiftUITablePresented) {
+      QuotesTableViewSwiftUI(store: store.tableStore)
     }
-    .sheet(item: $store.uiKitTableStore) { tableStore in
-      QuotesTableViewRepresentable(store: tableStore)
+    .sheet(isPresented: $store.uiKitTablePresented) {
+      QuotesTableViewRepresentable(store: store.tableStore)
     }
   }
 }
